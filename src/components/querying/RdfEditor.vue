@@ -127,25 +127,6 @@ export default {
     mounted() {
         // initial query off all namespaces from the repository
         this.queryAllNamespaces();
-
-        // checking if array for queries exists in the local storage
-        if (localStorage.getItem('storedQueries')) {
-            // get the content
-            this.storedQueries = JSON.parse(localStorage.getItem('storedQueries'));
-        } else {
-            // create the needed array 
-            const parsed = JSON.stringify(this.storedQueries);
-            localStorage.setItem('storedQueries', parsed);
-        }
-
-        // redirect from "SavedQueriesPage"
-        if (this.$route.params.do != "" && this.$route.params.name) {
-            this.queryName = this.$route.params.name;
-            this.$router.replace({ params: { name: undefined, do: undefined } });
-            // show the body of the chosen query in the editor
-            this.code = this.storedQueries.filter(i => i.name == this.queryName)[0].body;
-        }
-
     },
     methods: {
         // creating syntax highlighted version of the query
@@ -219,50 +200,28 @@ export default {
             });
 
             // syntax validation
-            this.validateQuery(queryText, this.parser);
+            let queryDescr = this.validateQuery(queryText, this.parser);
 
             // get the type of query
-            if (queryText.toLowerCase().includes("construct")) {
-                this.queryType = "construct";
-            } else if (queryText.toLowerCase().includes("ask")) {
-                this.queryType = "ask";
-            } else if (queryText.toLowerCase().includes("select")) {
-                this.queryType = "select";
-            } else if (queryText.toLowerCase().includes("update")) {
-                this.queryType = "update";
-            } else {
-                this.queryType = "empty";
-                this.$toast.add({ severity: 'error', summary: 'Error', detail: 'Query was empty!', life: 3000 });
-            }
-
+            this.queryType = queryDescr.queryType ? queryDescr.queryType.toLowerCase() : "empty";
+            console.log(queryDescr);
+            console.log('query type ' + this.queryType);
 
             let queryResponse;
             if (this.valid && this.queryType !== "empty") {
                 // emit that the fetching of data started, so show spinner
                 this.$emit('loadingResult', true);
-                let queryUrl = this.apiClient.repositoryRoot();
-                // change the URL end based on the type of query
-                if (this.queryType == "update") {
-                    queryUrl = queryUrl + '/repository/updateQuery';
-                } else {
-                    queryUrl = queryUrl + '/repository/query';
+
+                try {
+                    if (this.queryType == "update") {
+                        queryResponse = await this.apiClient.updateQuery(queryText);
+                    } else {
+                        queryResponse = await this.apiClient.selectQuery(queryText);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    this.$toast.add({ severity: 'error', summary: 'Error', detail: e.getMessage() });
                 }
-
-                queryResponse = await fetch(queryUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/sparql-query'
-                    },
-                    body: queryText,
-
-                })
-                    .then(res =>
-                        this.errorHandler(res),
-                    )
-                    .catch(error =>
-                        this.$toast.add({ severity: 'error', summary: 'Error', detail: error }),
-                    )
-                this.valid = !this.valid;
 
                 // emit that the fetching of data ended, so hide spinner
                 this.$emit('loadingResult', false);
@@ -288,9 +247,10 @@ export default {
         validateQuery(code, parser) {
             try {
                 // syntax validation by parser
-                parser.parse(code);
+                let ret = parser.parse(code);
                 this.valid = true;
                 this.showError(-1, '');
+                return ret;
             } catch (error) {
                 // parsing the number of the line on which the error is
                 // from the error.message 

@@ -85,7 +85,8 @@ export class ApiClient {
 		let response = await fetch(url, {
 			method: 'POST',
 			headers: this.headers({
-				'Content-Type': 'application/sparql-query'
+				'Content-Type': 'application/sparql-query',
+				'Accept': 'application/json'
 			}),
 			body: query
 		});
