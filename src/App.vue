@@ -77,6 +77,9 @@ export default {
 		this.userid = localStorage.getItem('rdf4j-userId');
         this.password = localStorage.getItem('rdf4j-password');
 		this.savePassword = !!this.password; // assume save password is checked if password is available
+		if (this.userid && this.password) { // assume user is already logged in when the credentials are available
+			this.apiClient.login(this.userid, this.password);
+		}
 		this.onReload = null;
 	},
 	methods: {
