@@ -35,17 +35,6 @@ export class ApiClient {
 		return await this.listRepositories(); // to check if login was successful
 	}
 
-    async getTypeByIRI(iri) {
-		const url = this.repositoryEndpoint() + '/type/' + encodeURIComponent(iri);
-		let response = await fetch(url, {
-			method: 'GET',
-			headers: this.headers()
-		});
-		this.checkAuth(response);
-		const data = await response.json();
-		return data.result;
-	}
-
     async getSubjectDescription(subjectIri) {
 		const query = `SELECT * WHERE { <${subjectIri}> ?p ?v }`;
 		return await this.selectQuery(query);

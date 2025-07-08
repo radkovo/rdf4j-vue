@@ -7,10 +7,8 @@
 			showGridlines>
 			<Column header="Subject" filterField="v.value">
 				<template #body="rowdata">
-					<ValueInfo :data="rowdata.data" :activeIris="activeIris" 
-						extIcon="pi pi-globe" extTooltip="Show in Browser"
-						structIcon="pi pi-share-alt" 
-						@show-iri="showIri"	@show-ext="showExt" @show-struct="showIri" />
+					<RdfValue :data="rowdata.data" :activeIris="activeIris" 
+						@show-iri="showIri"	@show-ext="showExt" />
 				</template>
 				<template #filter="{filterModel,filterCallback}">
 					<InputText type="text" v-model="filterModel.value" @keydown.enter="filterCallback()" class="p-column-filter" :placeholder="`Search by value - `" v-tooltip.top.focus="'Hit enter key to filter'"/>
@@ -18,7 +16,7 @@
 			</Column>
 			<Column header="Property" filterField="p.value">
 				<template #body="rowdata">
-					<Iri :iri="rowdata.data.p.value" :active="activeIris" @show-iri="showIri"/>
+					<RdfIri :iri="rowdata.data.p.value" :active="activeIris" />
 				</template>
 				<template #filter="{filterModel,filterCallback}">
 					<InputText type="text" v-model="filterModel.value" @keydown.enter="filterCallback()" class="p-column-filter" :placeholder="`Search by name - `" v-tooltip.top.focus="'Hit enter key to filter'"/>
@@ -33,8 +31,8 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 
-import Iri from './Iri.vue';
-import ValueInfo from './ValueInfo.vue';
+import RdfIri from './RdfIri.vue';
+import RdfValue from './RdfValue.vue';
 
 import {FilterMatchMode} from '@primevue/core/api';
 
@@ -44,10 +42,10 @@ export default {
 		InputText,
 		DataTable,
 		Column,
-		Iri,
-		ValueInfo,
+		RdfIri,
+		RdfValue,
 	},
-	emits: ['show-iri'],
+	emits: ['show-iri', 'show-ext'],
 	inject: ['apiClient'],
 	props: {
 		iri: null,
@@ -87,8 +85,7 @@ export default {
 		},
 
 		showExt(iri) {
-			let route = this.$router.resolve({name: 'show', params: { repoId: this.$route.params.repoId, iri: iri }});
-			window.open(route.href, '_blank');
+			this.$emit('show-ext', iri);
 		}
 	}
 }

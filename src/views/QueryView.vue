@@ -4,7 +4,7 @@
 			<RdfEditor @resultReturn="resultsHandler" @loadingResult="loadingStart" />
 		</div>
 		<div class="query-results">
-			<QueryResults v-if="queryResult && !loading" :result="queryResult" />
+			<QueryResults v-if="queryResult && !loading" :result="queryResult" @show-iri="showIri" />
 		</div>
 	</div>
 </template>
@@ -50,6 +50,11 @@ export default {
 			this.queryResult = r;
 			console.log(r);
 		},
+
+		showIri(iri) {
+            let route = this.$router.resolve({ name: 'explore', params: { repoId: this.$route.params.repoId, iri: iri } });
+            window.open(route.href, '_blank');
+        },
 
 	}
 }

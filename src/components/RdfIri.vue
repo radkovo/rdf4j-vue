@@ -9,7 +9,7 @@
 import IriDecoder from '../common/iridecoder.js';
 
 export default {
-	name: 'Iri',
+	name: 'RdfIri',
 	props: {
 		iri: null,
 		active: null
