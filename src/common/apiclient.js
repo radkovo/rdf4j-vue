@@ -47,25 +47,13 @@ export class ApiClient {
 	}
 
     async getSubjectDescription(subjectIri) {
-		const url = this.repositoryEndpoint() + '/statements?subj=' + encodeURIComponent('<' + subjectIri + '>');
-		let response = await fetch(url, {
-			method: 'GET',
-			headers: this.headers()
-		});
-		this.checkAuth(response);
-		const data = await response.json();
-		return data;
+		const query = `SELECT * WHERE { <${subjectIri}> ?p ?v }`;
+		return await this.selectQuery(query);
 	}
 
     async getSubjectReferences(subjectIri) {
-		const url = this.repositoryEndpoint() + '/statements?subj=' + encodeURIComponent('<' + subjectIri + '>');
-		let response = await fetch(url, {
-			method: 'GET',
-			headers: this.headers()
-		});
-		this.checkAuth(response);
-		const data = await response.json();
-		return data;
+		const query = `SELECT * WHERE { ?v ?p <${subjectIri}> }`;
+        return await this.selectQuery(query);
 	}
 
     async getSubjectValue(subjectIri, propertyIri) {
