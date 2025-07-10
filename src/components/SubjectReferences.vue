@@ -7,8 +7,9 @@
 			showGridlines>
 			<Column header="Subject" filterField="v.value">
 				<template #body="rowdata">
-					<RdfValue :data="rowdata.data" :activeIris="activeIris" 
-						@show-iri="showIri"	@show-ext="showExt" />
+					<slot name="value" v-bind="rowdata.data">
+						{{ rowdata.data.v.value }}
+					</slot>
 				</template>
 				<template #filter="{filterModel,filterCallback}">
 					<InputText type="text" v-model="filterModel.value" @keydown.enter="filterCallback()" class="p-column-filter" :placeholder="`Search by value - `" v-tooltip.top.focus="'Hit enter key to filter'"/>
@@ -16,7 +17,9 @@
 			</Column>
 			<Column header="Property" filterField="p.value">
 				<template #body="rowdata">
-					<RdfIri :iri="rowdata.data.p.value" :active="activeIris" @show-iri="showIri"/>
+					<slot name="property" v-bind="rowdata.data">
+						{{ rowdata.data.p.value }}
+					</slot>
 				</template>
 				<template #filter="{filterModel,filterCallback}">
 					<InputText type="text" v-model="filterModel.value" @keydown.enter="filterCallback()" class="p-column-filter" :placeholder="`Search by name - `" v-tooltip.top.focus="'Hit enter key to filter'"/>
@@ -24,7 +27,9 @@
 			</Column>
 			<Column header="Context" filterField="g.value">
 				<template #body="rowdata">
-					<RdfIri :iri="rowdata.data.g.value" :active="activeIris" />
+					<slot name="context" v-bind="rowdata.data">
+						{{ rowdata.data.g.value }}
+					</slot>
 				</template>
 				<template #filter="{filterModel,filterCallback}">
 					<InputText type="text" v-model="filterModel.value" @keydown.enter="filterCallback()" class="p-column-filter" :placeholder="`Search by value - `" v-tooltip.top.focus="'Hit enter key to filter'"/>
@@ -39,9 +44,6 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 
-import RdfIri from './RdfIri.vue';
-import RdfValue from './RdfValue.vue';
-
 import {FilterMatchMode} from '@primevue/core/api';
 
 export default {
@@ -49,15 +51,11 @@ export default {
 	components: {
 		InputText,
 		DataTable,
-		Column,
-		RdfIri,
-		RdfValue,
+		Column
 	},
-	emits: ['show-iri', 'show-ext'],
 	inject: ['apiClient'],
 	props: {
 		iri: null,
-		activeIris: null
 	},
 	data () {
 		return {
@@ -88,14 +86,6 @@ export default {
 				}
 			}
 		},
-
-		showIri(iri) {
-			this.$emit('show-iri', iri);
-		},
-
-		showExt(iri) {
-			this.$emit('show-ext', iri);
-		}
 	}
 }
 </script>

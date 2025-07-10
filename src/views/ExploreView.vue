@@ -5,8 +5,28 @@
 			<InputText type="text" v-model="destIri" @keydown.enter="changeIri()" style="width: 50em" />
 			<Button class="ml-2" label="Explore" @click="changeIri()" />
 		</div>
-		<SubjectInfo v-if="iri && selMode === 'Subject'" :iri="iri" :activeIris="true" @show-iri="showIri" />
-		<SubjectReferences v-if="iri && selMode === 'Object'" :iri="iri" :activeIris="true" @show-iri="showIri" />
+		<SubjectInfo v-if="iri && selMode === 'Subject'" :iri="iri">
+			<template #property="binding">
+				<RdfIri :iri="binding.p.value" :active="true" @show-iri="showIri" />
+			</template>
+			<template #value="binding">
+				<RdfValue :data="binding" :activeIris="true" @show-iri="showIri" />
+			</template>
+			<template #context="binding">
+				<RdfIri :iri="binding.g.value" :active="true" @show-iri="showContext" />
+			</template>
+		</SubjectInfo>
+		<SubjectReferences v-if="iri && selMode === 'Object'" :iri="iri">
+			<template #property="binding">
+				<RdfIri :iri="binding.p.value" :active="true" @show-iri="showIri" />
+			</template>
+			<template #value="binding">
+				<RdfValue :data="binding" :activeIris="true" @show-iri="showIri" />
+			</template>
+			<template #context="binding">
+				<RdfIri :iri="binding.g.value" :active="true" @show-iri="showContext" />
+			</template>
+		</SubjectReferences>
 	</div>
 </template>
 
@@ -17,6 +37,8 @@ import Select from 'primevue/select';
 
 import SubjectInfo from '../components/SubjectInfo.vue';
 import SubjectReferences from '../components/SubjectReferences.vue';
+import RdfIri from '../components/RdfIri.vue';
+import RdfValue from '../components/RdfValue.vue';
 
 import IriDecoder from '../common/iridecoder.js';
 
@@ -28,7 +50,9 @@ export default {
 		InputText,
 		Select,
 		SubjectInfo,
-		SubjectReferences
+		SubjectReferences,
+		RdfIri,
+        RdfValue
 	},
 	props: {
 	},
@@ -69,6 +93,9 @@ export default {
 			this.selMode = 'Subject';
 			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri }});
 		},
+
+		showContext(iri) {
+        },
 
 		changeIri() {
 			let dec = new IriDecoder();

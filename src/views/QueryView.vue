@@ -4,7 +4,11 @@
 			<RdfEditor @resultReturn="resultsHandler" @loadingResult="loadingStart" />
 		</div>
 		<div class="query-results">
-			<QueryResults v-if="queryResult && !loading" :result="queryResult" @show-iri="showIri" />
+			<QueryResults v-if="queryResult && !loading" :result="queryResult" @show-iri="showIri">
+				<template #value="slotProps">
+					<RdfValue :data="getValInfo(slotProps)" :activeIris="true" @show-iri="showIri" />
+				</template>
+			</QueryResults>
 		</div>
 	</div>
 </template>
@@ -12,12 +16,14 @@
 <script>
 import RdfEditor from '../components/querying/RdfEditor.vue';
 import QueryResults from "../components/querying/QueryResults.vue"
+import RdfValue from '../components/RdfValue.vue';
 
 export default {
 	name: 'QueryView',
 	components: {
 		RdfEditor,
-		QueryResults
+		QueryResults,
+		RdfValue
 	},
 	props: {
 	},
@@ -39,6 +45,13 @@ export default {
 	watch: {
 	},
 	methods: {
+        getValInfo(data) {
+			// transforms data to the form expected by RdfValue component (v: value, p: property, c: context)
+			// property and value are not available in query view but can be provided e.g. by the explore view and are
+			// potentially useful for displaying the value details
+            return { v: data }; 
+        },
+
 		update() {
 		},
 

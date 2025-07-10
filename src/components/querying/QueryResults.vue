@@ -14,9 +14,9 @@
 
                 <Column v-for="(col, i) in columns" :field="col" :header="col" :key="i" :filterField="`${col}f`">
                     <template #body="slotProps">
-                        <!-- {{slotProps.data[col].val}} -->
-                        <RdfValue :data="getValInfo(slotProps.data[col])" :activeIris="true" @show-iri="showIri"
-                            @show-ext="showExt" />
+                        <slot name="value" v-bind="slotProps.data[col]">
+                            {{ slotProps.data[col].value }}
+                        </slot>
                     </template>
                     <template #filter="{ filterModel, filterCallback }">
                         <InputText type="text" v-model="filterModel.value" @keydown.enter="filterCallback()"
@@ -47,8 +47,6 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 
-import RdfValue from '../RdfValue.vue';
-
 import { FilterMatchMode } from '@primevue/core/api';
 
 import { Parser } from "n3";
@@ -56,12 +54,10 @@ import { Parser } from "n3";
 export default {
     name: 'QueryResults',
     props: ['result'],
-	emits: ['show-iri', 'show-ext'],
     components: {
         DataTable,
         Column,
-        InputText,
-        RdfValue
+        InputText
     },
     data() {
         return {
@@ -88,10 +84,6 @@ export default {
         this.processResponse();
     },
     methods: {
-        getValInfo(data) {
-            return { v: data }; //transforms data to the form expected by RdfValue component
-        },
-
         // function activating resource exploration component
         exploreResource(resource) {
             this.filters = {};
@@ -210,15 +202,7 @@ export default {
                 this.rawValues.push(rawRow);
                 this.computedResult.push(answers);
             })
-        },
-
-		showIri(iri) {
-			this.$emit('show-iri', iri);
-		},
-
-		showExt(iri) {
-			this.$emit('show-iri', iri);
-		}
+        }
 
     }
 
