@@ -36,12 +36,12 @@ export class ApiClient {
 	}
 
     async getSubjectDescription(subjectIri) {
-		const query = `SELECT * WHERE { <${subjectIri}> ?p ?v }`;
+		const query = `SELECT * WHERE { GRAPH ?g { <${subjectIri}> ?p ?v } }`;
 		return await this.selectQuery(query);
 	}
 
     async getSubjectReferences(subjectIri) {
-		const query = `SELECT * WHERE { ?v ?p <${subjectIri}> }`;
+		const query = `SELECT * WHERE { GRAPH ?g { ?v ?p <${subjectIri}> } }`;
         return await this.selectQuery(query);
 	}
 

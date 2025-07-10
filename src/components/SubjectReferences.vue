@@ -16,10 +16,18 @@
 			</Column>
 			<Column header="Property" filterField="p.value">
 				<template #body="rowdata">
-					<RdfIri :iri="rowdata.data.p.value" :active="activeIris" />
+					<RdfIri :iri="rowdata.data.p.value" :active="activeIris" @show-iri="showIri"/>
 				</template>
 				<template #filter="{filterModel,filterCallback}">
 					<InputText type="text" v-model="filterModel.value" @keydown.enter="filterCallback()" class="p-column-filter" :placeholder="`Search by name - `" v-tooltip.top.focus="'Hit enter key to filter'"/>
+				</template>												
+			</Column>
+			<Column header="Context" filterField="g.value">
+				<template #body="rowdata">
+					<RdfIri :iri="rowdata.data.g.value" :active="activeIris" />
+				</template>
+				<template #filter="{filterModel,filterCallback}">
+					<InputText type="text" v-model="filterModel.value" @keydown.enter="filterCallback()" class="p-column-filter" :placeholder="`Search by value - `" v-tooltip.top.focus="'Hit enter key to filter'"/>
 				</template>												
 			</Column>
 		</DataTable>
@@ -56,7 +64,8 @@ export default {
 			subjectModel: null,
 			dFilters: {
 				'p.value': {value: null, matchMode: FilterMatchMode.CONTAINS},
-				'v.value': {value: null, matchMode: FilterMatchMode.CONTAINS}
+				'v.value': {value: null, matchMode: FilterMatchMode.CONTAINS},
+				'g.value': {value: null, matchMode: FilterMatchMode.CONTAINS}
 			}			
 		}
 	},
