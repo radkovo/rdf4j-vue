@@ -219,8 +219,12 @@ export default {
                         queryResponse = await this.apiClient.selectQuery(queryText);
                     }
                 } catch (e) {
-                    console.error(e);
-                    this.$toast.add({ severity: 'error', summary: 'Error', detail: e.getMessage() });
+                    console.log(e);
+                    let message = e.message;
+                    if (message.startsWith("4")) {
+                        message = "Query execution failed (" + message + " - Server Error)";
+                    }
+                    this.$toast.add({ severity: 'error', summary: 'Error', detail: message });
                 }
 
                 // emit that the fetching of data ended, so hide spinner
