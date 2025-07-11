@@ -3,7 +3,10 @@
 		<div class="query-editor">
 			<RdfEditor @resultReturn="resultsHandler" @loadingResult="loadingStart" />
 		</div>
-		<div class="query-results">
+		<div class="loading-spinner" v-if="loading">
+			Loading...
+        </div>
+		<div class="query-results" v-if="!loading">
 			<QueryResults v-if="queryResult && !loading" :result="queryResult" @show-iri="showIri">
 				<template #value="slotProps">
 					<RdfValue :data="getValInfo(slotProps)" :activeIris="true" @show-iri="showIri" />

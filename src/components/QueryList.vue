@@ -62,7 +62,6 @@ export default {
 		async update() {
             const data = await this.apiClient.getSavedQueries();
             this.queries = data;
-			console.log('Queries:', this.queries);
 		},
 
         selectRow(ev) {

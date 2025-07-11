@@ -120,6 +120,8 @@ export default {
         queryType: "select",
         // name of the query to be saved
         queryName: "",
+        // number of results or -1 when not available
+        resultsCount: -1,
 
         savedQueriesShown: false,
         selectedQuery: null
@@ -205,7 +207,9 @@ export default {
             // get the type of query
             this.queryType = queryDescr.queryType ? queryDescr.queryType.toLowerCase() : "empty";
             console.log(queryDescr);
-            console.log('query type ' + this.queryType);
+
+            // count the results
+            this.resultsCount = await this.countResults(queryDescr);
 
             let queryResponse;
             if (this.valid && this.queryType !== "empty") {
@@ -245,6 +249,40 @@ export default {
                 }
             }
 
+        },
+
+        // Counts the number of results for select queries 
+        async countResults(queryDescr) {
+            if (queryDescr.queryType === "SELECT") {
+                // clone the query functions to avoid modifying the original
+                let cntQuery = { ...queryDescr };
+                // modify the cloned query to count results
+                cntQuery.variables = [
+                    {
+                        expression: {
+                            expression: new Sparqljs.Wildcard(),
+                            type: "aggregate",
+                            aggregation: "count",
+                            distinct: queryDescr.distinct ? true : false,
+                        },
+                        variable: {
+                            termType: "Variable",
+                            value: "count"
+                        }
+                    }
+                ];
+                console.log('cntQuery', cntQuery);
+                let generator = new Sparqljs.Generator();
+                console.log('origQueryStr', generator.stringify(queryDescr));
+                let cntQueryStr = generator.stringify(cntQuery);
+                console.log('cntQueryStr', cntQueryStr);
+                let result = await this.apiClient.selectQuery(cntQueryStr);
+                console.log(result);
+                // return the count of results
+                return result.results.bindings[0].count.value;
+            } else {
+                return -1; //don't know
+            }
         },
 
         // validation of the query typed in by the user 

@@ -267,7 +267,6 @@ export class ApiClient {
 
 	async getSavedQueries() {
 		let json = localStorage.getItem(QUERIES_STORAGE_KEY);
-		console.log('getSavedQueries', json);
 		if (json) {
             let queries = JSON.parse(json);
 			// assign id to each query
