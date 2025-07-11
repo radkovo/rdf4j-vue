@@ -3,6 +3,7 @@ import Home from "../views/Home.vue";
 import RepositoryView from "../views/RepositoryView.vue";
 import ExploreView from "../views/ExploreView.vue";
 import QueryView from "../views/QueryView.vue";
+import ContextsView from "../views/ContextsView.vue";
 
 const router = createRouter({
 	history: createWebHashHistory(),
@@ -26,6 +27,11 @@ const router = createRouter({
 					path: 'query',
 					component: QueryView
 				},
+				{
+                    name: 'contexts',
+                    path: 'contexts',
+                    component: ContextsView
+                }
 			]
 		}
 	]

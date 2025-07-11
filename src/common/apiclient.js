@@ -103,7 +103,9 @@ export class ApiClient {
 		const url = this.repositoryEndpoint() + '/contexts';
 		let response = await fetch(url, {
 			method: 'GET',
-			headers: this.headers()
+			headers: this.headers({
+				'Accept': 'application/json'
+			})
 		});
 		this.checkAuth(response);
 		if (!response.ok) {

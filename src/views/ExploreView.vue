@@ -1,5 +1,6 @@
 <template>
 	<div class="explore-view">
+		<h2>Explore</h2>
 		<div class="subj-selection">
 			<Select v-model="selMode" :options="modes" /> 
 			<InputText type="text" v-model="destIri" @keydown.enter="changeIri()" style="width: 50em" />
@@ -107,6 +108,9 @@ export default {
 </script>
 
 <style>
+.explore-view {
+    margin: 0 2em;
+}
 .explore-view .subj-selection {
 	padding: 1em;
 }

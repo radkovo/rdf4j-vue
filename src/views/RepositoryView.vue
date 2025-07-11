@@ -50,7 +50,8 @@ export default {
 			menuItems: [
 				//{label: 'Overview', to: {name: 'repo'}},
 				{label: 'Query', to: {name: 'query'}},
-				{label: 'Explore', to: {name: 'explore'}}
+				{label: 'Explore', to: {name: 'explore'}},
+				{label: 'Contexts', to: {name: 'contexts'}},
 			]
 		}
 	},
