@@ -14,8 +14,8 @@
 </template>
 
 <script>
-import RdfEditor from '../components/querying/RdfEditor.vue';
-import QueryResults from "../components/querying/QueryResults.vue"
+import RdfEditor from '../components/RdfEditor.vue';
+import QueryResults from "../components/QueryResults.vue"
 import RdfValue from '../components/RdfValue.vue';
 
 export default {
