@@ -7,7 +7,13 @@ const protocol = localMode ? location.protocol : 'https:'; //force https for non
 // Note that the server also has a maximal allowed limit that cannot be exceeded.
 const QUERY_LIMIT = 2048; 
 
+// Local storage key for saved queries.
+const QUERIES_STORAGE_KEY = 'rdf4j-queries';
 
+/**
+ * A default API client implementation that uses fetch() for connecting the RDF4J server REST API.
+ * Saved queries are stored in local storage.
+ */
 export class ApiClient {
 
 	serverUrl = 'http://localhost/rdf4j-server';
@@ -206,6 +212,29 @@ export class ApiClient {
 		}
 	}
 
+	async getNamespaces() {
+		const url = this.repositoryEndpoint() + '/namespaces';
+		try {
+			let response = await fetch(url, {
+				method: 'GET',
+				headers: this.headers({
+					'Accept': 'application/json'
+				})
+			});
+
+			this.checkAuth(response);
+			if (!response.ok) {
+				let data = await response.json();
+				throw new Error(data.message);
+			}
+
+			const data = await response.json();
+			return data;
+		} catch (e) {
+			throw new Error(e);
+		}		
+	}
+
 	//================================================================================
 
 	checkAuth(response) {
@@ -235,86 +264,30 @@ export class ApiClient {
 	//================================================================================
 
 	async getSavedQueries() {
-		const url = this.queriesEndpoint();
-		try {
-			let response = await fetch(url, {
-				method: 'GET',
-				headers: this.headers()
-			});
-
-			this.checkAuth(response);
-			if (!response.ok) {
-				let data = await response.json();
-				throw new Error(data.message);
-			}
-
-			const data = await response.json();
-			return data;
-		} catch (e) {
-			throw new Error(e);
-		}		
+		let json = localStorage.getItem(QUERIES_STORAGE_KEY);
+		console.log('getSavedQueries', json);
+		if (json) {
+            let queries = JSON.parse(json);
+			// assign id to each query
+			queries.forEach((q, i) => {
+                q.id = i + 1;
+            });
+            return queries;
+        } else {
+            return [];
+        }
 	}
 
 	async saveQuery(data) {
-		const url = this.queriesEndpoint();
-		try {
-			let response = await fetch(url, {
-				method: 'POST',
-				headers: this.headers({
-					'Content-Type': 'application/json'
-				}),
-				body: JSON.stringify(data)
-			});
-
-			this.checkAuth(response);
-			const rdata = await response.json();
-			if (!response.ok) {
-				throw new Error(rdata.message);
-			}
-
-			return rdata;
-
-		} catch (e) {
-			throw new Error(e);
-		}
+		let queries = await this.getSavedQueries();
+        queries.push(data);
+        localStorage.setItem(QUERIES_STORAGE_KEY, JSON.stringify(queries));
 	}
 
 	async deleteQuery(queryId) {
-		const url = this.queriesEndpoint() + '/' + queryId;
-		let response = await fetch(url, {
-			method: 'DELETE',
-			headers: this.headers()
-		})
-		this.checkAuth(response);
-		if (!response.ok) {
-			let error = response.status;
-			throw new Error(error);
-		}
-		const data = await response.json();
-		return data.status == 'ok';
-	}
-
-	async getNamespaces() {
-		const url = this.repositoryEndpoint() + '/namespaces';
-		try {
-			let response = await fetch(url, {
-				method: 'GET',
-				headers: this.headers({
-					'Accept': 'application/json'
-				})
-			});
-
-			this.checkAuth(response);
-			if (!response.ok) {
-				let data = await response.json();
-				throw new Error(data.message);
-			}
-
-			const data = await response.json();
-			return data;
-		} catch (e) {
-			throw new Error(e);
-		}		
+		let queries = await this.getSavedQueries();
+        queries = queries.filter(q => q.id !== queryId);
+        localStorage.setItem(QUERIES_STORAGE_KEY, JSON.stringify(queries));
 	}
 
 	//================================================================================
