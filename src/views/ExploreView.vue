@@ -29,6 +29,9 @@
 			</template>
 		</SubjectReferences>
 		<SubjectMentions v-if="iri && selMode === 'Any'" :iri="iri">
+            <template #value="binding">
+                <RdfValue :data="getValInfo(binding)" :activeIris="true" @show-iri="showIri" />
+            </template>
 		</SubjectMentions>
 	</div>
 </template>
@@ -87,6 +90,16 @@ export default {
 		'$route.params.iri': 'update'
 	},
 	methods: {
+        getValInfo(data) {
+			// transforms data to the form expected by RdfValue component (v: value, p: property, c: context)
+			// property and value are not available in query view but can be provided e.g. by the explore view and are
+			// potentially useful for displaying the value details
+			if (!data.value) {
+				data.value = '';
+			}
+            return { v: data }; 
+        },
+
 		update() {
 			if (this.iri) {
 				let dec = new IriDecoder();

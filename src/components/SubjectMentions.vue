@@ -1,9 +1,10 @@
 <template>
 	<div class="subject-info" v-if="iri">
 		<QueryResults v-if="queryResult && !loading" :result="queryResult">
-			<template #value="slotProps">
-				<!--<RdfValue :data="getValInfo(slotProps)" :activeIris="true" @show-iri="showIri" /> -->
-				{{ slotProps }}
+			<template #value="rdfValue">
+				<slot name="value" v-bind="rdfValue">
+					{{ rdfValue.value }}
+				</slot>
 			</template>
 		</QueryResults>
 	</div>
@@ -36,8 +37,8 @@ export default {
 	methods: {
 		async update() {
 			if (this.iri) {
-				const data = await this.apiClient.getSubjectReferences(this.iri);
-				this.queryResult = [ data, [], 'select' ];
+				const data = await this.apiClient.getSubjectMentions(this.iri);
+				this.queryResult = { data: [ data, [], 'select' ] };
 			}
 		},
 	}

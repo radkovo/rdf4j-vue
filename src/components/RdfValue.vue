@@ -31,6 +31,10 @@ export default {
     props: {
         data: {
             type: Object
+			// The object should contain at least 'v' (RDF value) property with 'value' and 'type' properties
+			// Example: { v: { value: 'http://example.org/resource/123', type: 'uri' } }
+			// Optionally the 's' (subject) property and 'p' (predicate) properties can be provided for
+			// better visualization in alternative implementations
         },
         activeIris: {
             type: Boolean,

@@ -8,8 +8,8 @@
         </div>
 		<div class="query-results" v-if="!loading">
 			<QueryResults v-if="queryResult && !loading" :result="queryResult">
-				<template #value="slotProps">
-					<RdfValue :data="getValInfo(slotProps)" :activeIris="true" @show-iri="showIri" />
+				<template #value="rdfValue">
+					<RdfValue :data="getValInfo(rdfValue)" :activeIris="true" @show-iri="showIri" />
 				</template>
 			</QueryResults>
 		</div>
