@@ -51,6 +51,56 @@ export class ApiClient {
         return await this.selectQuery(query);
 	}
 
+	async getSubjectMentions(iri) {
+		const query = `
+			SELECT (?s as ?subject) (?p as ?predicate) (?o as ?object) (?g as ?context) WHERE {
+				{
+					<${iri}> ?p ?o .
+					BIND(<${iri}> AS ?s)
+				}
+				UNION
+				{
+					?s <${iri}> ?o .
+					BIND(<${iri}> AS ?p)
+				}
+				UNION
+				{
+					?s ?p <${iri}> .
+					BIND(<${iri}> AS ?o)
+				}
+				UNION
+				{
+					GRAPH ?g {
+					<${iri}> ?p ?o .
+					BIND(<${iri}> AS ?s)
+					}
+				}
+				UNION
+				{
+					GRAPH ?g {
+					?s <${iri}> ?o .
+					BIND(<${iri}> AS ?p)
+					}
+				}
+				UNION
+				{
+					GRAPH ?g {
+					?s ?p <${iri}> .
+					BIND(<${iri}> AS ?o)
+					}
+				}
+				UNION
+				{
+					GRAPH <${iri}> {
+					?s ?p ?o .
+					BIND(<${iri}> AS ?g)
+					}
+				}
+			}		
+		`;
+        return await this.selectQuery(query);
+	}
+
     async getSubjectValue(subjectIri, propertyIri) {
 		const url = this.repositoryEndpoint() + '/subject/' + encodeURIComponent(subjectIri) + '/' + encodeURIComponent(propertyIri);
 		let response = await fetch(url, {

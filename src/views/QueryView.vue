@@ -7,7 +7,7 @@
 			Loading...
         </div>
 		<div class="query-results" v-if="!loading">
-			<QueryResults v-if="queryResult && !loading" :result="queryResult" @show-iri="showIri">
+			<QueryResults v-if="queryResult && !loading" :result="queryResult">
 				<template #value="slotProps">
 					<RdfValue :data="getValInfo(slotProps)" :activeIris="true" @show-iri="showIri" />
 				</template>

@@ -28,6 +28,8 @@
 				<RdfIri :iri="binding.g.value" :active="true" @show-iri="showContext" />
 			</template>
 		</SubjectReferences>
+		<SubjectMentions v-if="iri && selMode === 'Any'" :iri="iri">
+		</SubjectMentions>
 	</div>
 </template>
 
@@ -38,6 +40,8 @@ import Select from 'primevue/select';
 
 import SubjectInfo from '../components/SubjectInfo.vue';
 import SubjectReferences from '../components/SubjectReferences.vue';
+import SubjectMentions from '../components/SubjectMentions.vue';
+import QueryResults from '../components/QueryResults.vue';
 import RdfIri from '../components/RdfIri.vue';
 import RdfValue from '../components/RdfValue.vue';
 
@@ -52,6 +56,8 @@ export default {
 		Select,
 		SubjectInfo,
 		SubjectReferences,
+		SubjectMentions,
+		QueryResults,
 		RdfIri,
         RdfValue
 	},
@@ -61,8 +67,8 @@ export default {
 	data () {
 		return {
 			destIri: null,
-			selMode: 'Subject',
-			modes: [ 'Subject', 'Object' ]
+			selMode: 'Any',
+			modes: [ 'Any', 'Subject', 'Object' ]
 			//modes: [ { label: 'Subject', value: 'subject' }, { label: 'Object', value: 'object' } ]
 		}
 	},
