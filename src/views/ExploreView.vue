@@ -2,11 +2,11 @@
 	<div class="explore-view">
 		<h2>Explore</h2>
 		<div class="subj-selection">
-			<Select v-model="selMode" :options="modes" /> 
+			<Select v-model="selMode" :options="modes" @value-change="changeIri()" /> 
 			<InputText type="text" v-model="destIri" @keydown.enter="changeIri()" style="width: 50em" />
 			<Button class="ml-2" label="Explore" @click="changeIri()" />
 		</div>
-		<SubjectInfo v-if="iri && selMode === 'Subject'" :iri="iri">
+		<SubjectInfo v-if="iri && mode === 'subject'" :iri="iri">
 			<template #property="binding">
 				<RdfIri :iri="binding.p.value" :active="true" @show-iri="showIri" />
 			</template>
@@ -17,7 +17,7 @@
 				<RdfIri :iri="binding.g.value" :active="true" @show-iri="showContext" />
 			</template>
 		</SubjectInfo>
-		<SubjectReferences v-if="iri && selMode === 'Object'" :iri="iri">
+		<SubjectReferences v-if="iri && mode === 'object'" :iri="iri">
 			<template #property="binding">
 				<RdfIri :iri="binding.p.value" :active="true" @show-iri="showIri" />
 			</template>
@@ -28,7 +28,7 @@
 				<RdfIri :iri="binding.g.value" :active="true" @show-iri="showContext" />
 			</template>
 		</SubjectReferences>
-		<SubjectMentions v-if="iri && selMode === 'Any'" :iri="iri">
+		<SubjectMentions v-if="iri && mode === 'any'" :iri="iri">
             <template #value="binding">
                 <RdfValue :data="getValInfo(binding)" :activeIris="true" @show-iri="showIri" />
             </template>
@@ -70,8 +70,8 @@ export default {
 	data () {
 		return {
 			destIri: null,
-			selMode: 'Any',
-			modes: [ 'Any', 'Subject', 'Object' ]
+			selMode: 'any',
+			modes: [ 'any', 'subject', 'object' ]
 			//modes: [ { label: 'Subject', value: 'subject' }, { label: 'Object', value: 'object' } ]
 		}
 	},
@@ -82,12 +82,16 @@ export default {
 		iri() {
 			return this.$route.params.iri;
 		},
+		mode() {
+			return this.$route.params.mode;
+		},
 		repoId() {
 			return this.$route.params.repoId;
 		}
 	},
 	watch: {
-		'$route.params.iri': 'update'
+		'$route.params.iri': 'update',
+		'$route.params.mode': 'update',
 	},
 	methods: {
         getValInfo(data) {
@@ -107,11 +111,11 @@ export default {
 			} else {
 				this.destIri = '';
 			}
+			this.selMode = (this.mode && this.modes.includes(this.mode)) ? this.mode : 'any';
 		},
 
 		showIri(iri) {
-			this.selMode = 'Subject';
-			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri }});
+			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri, mode: 'any' }});
 		},
 
 		showContext(iri) {
@@ -120,7 +124,7 @@ export default {
 		changeIri() {
 			let dec = new IriDecoder();
 			let iri = dec.decodeIri(this.destIri);
-			this.showIri(iri);
+			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri, mode: this.selMode }});
 		}
 	}
 }

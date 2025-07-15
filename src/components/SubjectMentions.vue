@@ -37,8 +37,10 @@ export default {
 	methods: {
 		async update() {
 			if (this.iri) {
+				this.loading = true;
 				const data = await this.apiClient.getSubjectMentions(this.iri);
 				this.queryResult = { data: [ data, [], 'select' ] };
+				this.loading = false;
 			}
 		},
 	}

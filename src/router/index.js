@@ -19,7 +19,7 @@ const router = createRouter({
 			children: [
 				{
 					name: 'explore',
-					path: 'explore/:iri?',
+					path: 'explore/:iri?/:mode?',
 					component: ExploreView
 				},
 				{

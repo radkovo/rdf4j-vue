@@ -80,14 +80,17 @@ export default {
                 global: { value: null, matchMode: FilterMatchMode.CONTAINS }
             },
             // the query was typ of ASK (boolean result)
-            askRes: undefined,
-            // parser for N3 construct queries 
-            n3Parser: new Parser({ format: 'N-Triples' })
+            askRes: undefined
         }
     },
     mounted() {
+        // parser for N3 construct queries 
+        this.n3Parser = new Parser({ format: 'N-Triples' })
         this.processResponse();
     },
+	watch: {
+		result: 'processResponse'
+	},
     methods: {
         // function activating resource exploration component
         exploreResource(resource) {
