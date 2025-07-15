@@ -53,7 +53,12 @@ import { Parser } from "n3";
 
 export default {
     name: 'QueryResults',
-    props: ['result'],
+    props: {
+        result: {
+            type: Object,
+            required: true
+        }
+    },
     components: {
         DataTable,
         Column,
