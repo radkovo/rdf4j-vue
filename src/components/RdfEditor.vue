@@ -239,12 +239,10 @@ export default {
                     (this.queryType == "select" && queryResponse.results.bindings.length > 0) ||
                     (this.queryType == "construct" && queryResponse.length > 0) ||
                     (this.queryType == "update" && 'status' in queryResponse)) {
-                    let data = [queryResponse, this.prefixNsTuples, this.queryType];
-                    this.$emit('resultReturn', { data });
+                    this.$emit('resultReturn', { data: queryResponse, prefixes: this.prefixNsTuples, type: this.queryType });
                 } else {
                     // no data found for the query
-                    let data = ['', '', 'clear'];
-                    this.$emit('resultReturn', { data });
+                    this.$emit('resultReturn', { type: 'clear' });
                     this.$toast.add({ severity: 'warn', summary: 'Warn Message', detail: 'Query was successful but no data found!', life: 5000 });
                 }
             }

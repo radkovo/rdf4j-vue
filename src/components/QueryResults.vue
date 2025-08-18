@@ -1,6 +1,6 @@
 <template>
-    <div v-if="this.result.data[2] != 'clear'">
-        <div v-if="result.data[2] != 'ask' && result.data[2] != 'update'">
+    <div v-if="this.result.type != 'clear'">
+        <div v-if="result.type != 'ask' && result.type != 'update'">
             <DataTable :value="rawValues" responsiveLayout="scroll" :paginator="true" :rows="10"
                 paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                 :rowsPerPageOptions="[10, 20, 50]" currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
@@ -27,14 +27,14 @@
 
             </DataTable>
         </div>
-        <div v-else-if="result.data[2] == 'ask'">
+        <div v-else-if="result.type == 'ask'">
             <!--Boolean result -->
 
             <h3>The result of query is: {{ askRes ? "Yes" : "No" }}</h3>
             <i v-if="askRes" class="pi pi-check" style="color:green; font-weight:bold"></i>
             <i v-else class="pi pi-times" style="color:red; font-weight:bold"></i>
         </div>
-        <div v-else-if="result.data[2] == 'update'">
+        <div v-else-if="result.type == 'update'">
             <h3>The update query was successful
                 <i class="pi pi-check" style="color:green; font-weight:bold"></i>
             </h3>
@@ -55,7 +55,7 @@ export default {
     name: 'QueryResults',
     props: {
         result: {
-            type: Object,
+            type: Object, // object with data such as { data: { head: {}, results: {} }, prefixes: [], type: 'select' }
             required: true
         }
     },
@@ -111,19 +111,20 @@ export default {
         // set needed variables based on the response for its correct visualization
         processResponse() {
             if (this.result) {
+                console.log('Processing response:', this.result);
                 // hide table and ask result
                 this.showUserQueryRes = false;
                 this.askRes = undefined;
 
-                if (this.result.data[2] == "ask") {
+                if (this.result.type == "ask") {
                     // ASK query 
-                    this.askRes = this.result.data[0].boolean;
-                } else if (this.result.data[2] == "select") {
+                    this.askRes = this.result.data.boolean;
+                } else if (this.result.type == "select") {
                     // SELECT query   
-                    this.processSelectResult(this.result.data[0]);
-                } else if (this.result.data[2] == "construct") {
+                    this.processSelectResult(this.result.data);
+                } else if (this.result.type == "construct") {
                     // CONSTRUCT query
-                    this.processConstructResult(this.result.data[0]);
+                    this.processConstructResult(this.result.data);
                 }
             }
         },
@@ -153,7 +154,7 @@ export default {
                             let word = { 'val': quad[item].id, 'tol': quad[item].id, 'type': 'uri' };
 
                             // replace namespace with prefix if present
-                            this.result.data[1].forEach((el) => {
+                            this.result.prefixes.forEach((el) => {
                                 word.val = word.val.replace(el.namespace, el.prefix + ':');
                             })
 
@@ -190,7 +191,7 @@ export default {
                         let word = { 'val': element[item].value, 'tol': element[item].value, 'type': element[item].type };
 
                         // replace namespace with prefix if present
-                        this.result.data[1].forEach((el) => {
+                        this.result.prefixes.forEach((el) => {
                             word.val = word.val.replace(el.namespace, el.prefix + ':');
                         })
 
