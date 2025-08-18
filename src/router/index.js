@@ -4,6 +4,7 @@ import RepositoryView from "../views/RepositoryView.vue";
 import ExploreView from "../views/ExploreView.vue";
 import QueryView from "../views/QueryView.vue";
 import ContextsView from "../views/ContextsView.vue";
+import ContextView from "../views/ContextView.vue";
 
 const router = createRouter({
 	history: createWebHashHistory(),
@@ -31,6 +32,11 @@ const router = createRouter({
                     name: 'contexts',
                     path: 'contexts',
                     component: ContextsView
+                },
+				{
+                    name: 'context',
+                    path: 'context/:contextIri',
+                    component: ContextView
                 }
 			]
 		}
