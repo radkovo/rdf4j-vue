@@ -39,7 +39,11 @@ export default {
 			if (this.iri) {
 				this.loading = true;
 				const data = await this.apiClient.getSubjectMentions(this.iri);
-				this.queryResult = { data: [ data, [], 'select' ] };
+				this.queryResult = {
+					data: data, 
+					prefixes: [],
+					type: 'select'
+				};
 				this.loading = false;
 			}
 		},

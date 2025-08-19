@@ -111,7 +111,7 @@ export default {
 	},
 	methods: {
 		update() {
-			if (this.data && this.data.v) {
+			if (this.data && this.data.v && this.data.v.value) {
 				this.valueType = this.data.v.type;
 				this.showExt = this.active = false;
 				if (this.valueType === 'uri') {
@@ -122,6 +122,7 @@ export default {
 					this.displayValue = this.iri;
 					this.displayTooltip = 'Blank node';
 				} else {
+					console.log('Detect: Unknown value type: ', this.data.v);
 					this.detectLiteralType();
 				}
 			} else {

@@ -8,7 +8,9 @@
 			showGridlines>
 			<Column header="Context" filterField="iri" field="iri">
 				<template #body="rowdata">
-					<RdfIri :iri="rowdata.data.iri" :active="true" @show-iri="showContext" />
+					<RouterLink :to="{name: 'explore', params: {iri: rowdata.data.iri}}">
+						<RdfIri :iri="rowdata.data.iri" :active="false" @show-iri="showContext" />
+					</RouterLink>
 				</template>
 				<template #filter="{filterModel,filterCallback}">
 					<InputText type="text" v-model="filterModel.value" @keydown.enter="filterCallback()" class="p-column-filter" :placeholder="`Search by IRI - `" v-tooltip.top.focus="'Hit enter key to filter'"/>
@@ -60,12 +62,7 @@ export default {
 		async update() {
             this.loading = true;
 			this.contexts = await this.apiClient.getContexts();
-			console.log('Contexts:', this.contexts);
-        },
-
-		showContext(iri) {
-        },
-
+        }
 	}
 }
 </script>
