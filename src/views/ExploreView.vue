@@ -6,33 +6,12 @@
 			<InputText type="text" v-model="destIri" @keydown.enter="changeIri()" style="width: 50em" />
 			<Button class="ml-2" label="Explore" @click="changeIri()" />
 		</div>
-		<SubjectInfo v-if="iri && selMode === 'subject'" :iri="iri">
-			<template #property="binding">
-				<RdfIri :iri="binding.p.value" :active="true" @show-iri="showIri" />
+		<QueryResults v-if="queryResult && !loading" :result="queryResult">
+			<template #value="rdfValue">
+				<RdfValue :data="getValInfo(rdfValue)" :activeIris="true" @show-iri="showIri" />
 			</template>
-			<template #value="binding">
-				<RdfValue :data="binding" :activeIris="true" @show-iri="showIri" />
-			</template>
-			<template #context="binding">
-				<RdfIri :iri="binding.g.value" :active="true" @show-iri="showContext" />
-			</template>
-		</SubjectInfo>
-		<SubjectReferences v-if="iri && selMode === 'object'" :iri="iri">
-			<template #property="binding">
-				<RdfIri :iri="binding.p.value" :active="true" @show-iri="showIri" />
-			</template>
-			<template #value="binding">
-				<RdfValue :data="binding" :activeIris="true" @show-iri="showIri" />
-			</template>
-			<template #context="binding">
-				<RdfIri :iri="binding.g.value" :active="true" @show-iri="showContext" />
-			</template>
-		</SubjectReferences>
-		<SubjectMentions v-if="iri && selMode === 'any'" :iri="iri">
-            <template #value="binding">
-                <RdfValue :data="getValInfo(binding)" :activeIris="true" @show-iri="showIri" />
-            </template>
-		</SubjectMentions>
+		</QueryResults>
+		
 	</div>
 </template>
 
@@ -41,9 +20,6 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
 
-import SubjectInfo from '../components/SubjectInfo.vue';
-import SubjectReferences from '../components/SubjectReferences.vue';
-import SubjectMentions from '../components/SubjectMentions.vue';
 import QueryResults from '../components/QueryResults.vue';
 import RdfIri from '../components/RdfIri.vue';
 import RdfValue from '../components/RdfValue.vue';
@@ -57,9 +33,6 @@ export default {
 		Button,
 		InputText,
 		Select,
-		SubjectInfo,
-		SubjectReferences,
-		SubjectMentions,
 		QueryResults,
 		RdfIri,
         RdfValue
@@ -69,6 +42,7 @@ export default {
 	inject: ['apiClient'],
 	data () {
 		return {
+			queryResult: null,
 			destIri: null,
 			selMode: 'any',
 			modes: [ 'any', 'subject', 'object' ]
@@ -104,7 +78,7 @@ export default {
             return { v: data }; 
         },
 
-		update() {
+		async update() {
 			if (this.iri) {
 				let dec = new IriDecoder();
 				this.destIri = dec.encodeIri(this.iri);
@@ -112,14 +86,31 @@ export default {
 				this.destIri = '';
 			}
 			this.selMode = (this.mode && this.modes.includes(this.mode)) ? this.mode : 'any';
+
+			if (this.destIri) {
+				this.loading = true;
+				let data;
+				if (this.selMode === 'subject') {
+					data = await this.apiClient.getSubjectDescription(this.destIri);
+                } else if (this.selMode === 'object') {
+					data = await this.apiClient.getSubjectReferences(this.destIri);
+				} else {
+					data = await this.apiClient.getSubjectMentions(this.destIri);
+				}
+				this.queryResult = {
+					data: data, 
+					prefixes: [],
+					type: 'select'
+				};
+				console.log(this.queryResult);
+				this.loading = false;
+			}
+
 		},
 
 		showIri(iri) {
 			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri, mode: 'any' }});
 		},
-
-		showContext(iri) {
-        },
 
 		changeIri() {
 			let dec = new IriDecoder();

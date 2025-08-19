@@ -10,6 +10,9 @@ const QUERY_LIMIT = 2048;
 // Local storage key for saved queries.
 const QUERIES_STORAGE_KEY = 'rdf4j-queries';
 
+// RDF4J NIL IRI
+const NIL_IRI = 'http://rdf4j.org/schema/rdf4j#nil';
+
 /**
  * A default API client implementation that uses fetch() for connecting the RDF4J server REST API.
  * Saved queries are stored in local storage.
@@ -41,13 +44,45 @@ export class ApiClient {
 		return await this.listRepositories(); // to check if login was successful
 	}
 
-    async getSubjectDescription(subjectIri) {
-		const query = `SELECT * WHERE { GRAPH ?g { <${subjectIri}> ?p ?v } }`;
+    async getSubjectDescription(iri) {
+		const query = `
+			SELECT (?s as ?subject) (?p as ?predicate) (?o as ?object) (?g as ?context) WHERE {
+				{
+					GRAPH <${NIL_IRI}> {
+						<${iri}> ?p ?o .
+						BIND(<${iri}> AS ?s)
+					}
+				}
+				UNION
+				{
+					GRAPH ?g {
+						<${iri}> ?p ?o .
+						BIND(<${iri}> AS ?s)
+					}
+				}
+			}		
+		`;
 		return await this.selectQuery(query);
 	}
 
-    async getSubjectReferences(subjectIri) {
-		const query = `SELECT * WHERE { GRAPH ?g { ?v ?p <${subjectIri}> } }`;
+    async getSubjectReferences(iri) {
+		const query = `
+			SELECT (?s as ?subject) (?p as ?predicate) (?o as ?object) (?g as ?context) WHERE {
+				{
+					GRAPH <${NIL_IRI}> {
+						?s ?p <${iri}> .
+						BIND(<${iri}> AS ?o)
+					}
+				}
+				UNION
+				{
+					GRAPH ?g {
+						?s ?p <${iri}> .
+						BIND(<${iri}> AS ?o)
+					}
+				}
+			}		
+		`;
         return await this.selectQuery(query);
 	}
 
@@ -55,45 +90,51 @@ export class ApiClient {
 		const query = `
 			SELECT (?s as ?subject) (?p as ?predicate) (?o as ?object) (?g as ?context) WHERE {
 				{
-					<${iri}> ?p ?o .
-					BIND(<${iri}> AS ?s)
+					GRAPH <${NIL_IRI}> {
+						<${iri}> ?p ?o .
+						BIND(<${iri}> AS ?s)
+					}
 				}
 				UNION
 				{
-					?s <${iri}> ?o .
-					BIND(<${iri}> AS ?p)
+					GRAPH <${NIL_IRI}> {
+						?s <${iri}> ?o .
+						BIND(<${iri}> AS ?p)
+					}
 				}
 				UNION
 				{
-					?s ?p <${iri}> .
-					BIND(<${iri}> AS ?o)
-				}
-				UNION
-				{
-					GRAPH ?g {
-					<${iri}> ?p ?o .
-					BIND(<${iri}> AS ?s)
+					GRAPH <${NIL_IRI}> {
+						?s ?p <${iri}> .
+						BIND(<${iri}> AS ?o)
 					}
 				}
 				UNION
 				{
 					GRAPH ?g {
-					?s <${iri}> ?o .
-					BIND(<${iri}> AS ?p)
+						<${iri}> ?p ?o .
+						BIND(<${iri}> AS ?s)
 					}
 				}
 				UNION
 				{
 					GRAPH ?g {
-					?s ?p <${iri}> .
-					BIND(<${iri}> AS ?o)
+						?s <${iri}> ?o .
+						BIND(<${iri}> AS ?p)
+					}
+				}
+				UNION
+				{
+					GRAPH ?g {
+						?s ?p <${iri}> .
+						BIND(<${iri}> AS ?o)
 					}
 				}
 				UNION
 				{
 					GRAPH <${iri}> {
-					?s ?p ?o .
-					BIND(<${iri}> AS ?g)
+						?s ?p ?o .
+						BIND(<${iri}> AS ?g)
 					}
 				}
 			}		

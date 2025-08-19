@@ -9,7 +9,7 @@
 			<Column header="Context" filterField="iri" field="iri">
 				<template #body="rowdata">
 					<RouterLink :to="{name: 'explore', params: {iri: rowdata.data.iri}}">
-						<RdfIri :iri="rowdata.data.iri" :active="false" @show-iri="showContext" />
+						<RdfIri :iri="rowdata.data.iri" :active="false" />
 					</RouterLink>
 				</template>
 				<template #filter="{filterModel,filterCallback}">
