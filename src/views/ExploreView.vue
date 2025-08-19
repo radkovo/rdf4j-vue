@@ -6,7 +6,7 @@
 			<InputText type="text" v-model="destIri" @keydown.enter="changeIri()" style="width: 50em" />
 			<Button class="ml-2" label="Explore" @click="changeIri()" />
 		</div>
-		<SubjectInfo v-if="iri && mode === 'subject'" :iri="iri">
+		<SubjectInfo v-if="iri && selMode === 'subject'" :iri="iri">
 			<template #property="binding">
 				<RdfIri :iri="binding.p.value" :active="true" @show-iri="showIri" />
 			</template>
@@ -17,7 +17,7 @@
 				<RdfIri :iri="binding.g.value" :active="true" @show-iri="showContext" />
 			</template>
 		</SubjectInfo>
-		<SubjectReferences v-if="iri && mode === 'object'" :iri="iri">
+		<SubjectReferences v-if="iri && selMode === 'object'" :iri="iri">
 			<template #property="binding">
 				<RdfIri :iri="binding.p.value" :active="true" @show-iri="showIri" />
 			</template>
@@ -28,7 +28,7 @@
 				<RdfIri :iri="binding.g.value" :active="true" @show-iri="showContext" />
 			</template>
 		</SubjectReferences>
-		<SubjectMentions v-if="iri && mode === 'any'" :iri="iri">
+		<SubjectMentions v-if="iri && selMode === 'any'" :iri="iri">
             <template #value="binding">
                 <RdfValue :data="getValInfo(binding)" :activeIris="true" @show-iri="showIri" />
             </template>
