@@ -1,6 +1,5 @@
 <template>
 	<div class="prefix-config">
-		<h2 class="mt-6">Prefixes</h2>
 		<DataTable :value="namespaces" tableStyle="min-width: 50rem" class="p-datatable-small"
 			scrollable scrollHeight="30em">
 			<template #empty> No prefixes defined. </template>

@@ -4,6 +4,7 @@ import RepositoryView from "../views/RepositoryView.vue";
 import ExploreView from "../views/ExploreView.vue";
 import QueryView from "../views/QueryView.vue";
 import ContextsView from "../views/ContextsView.vue";
+import NamespacesView from "../views/NamespacesView.vue";
 
 const router = createRouter({
 	history: createWebHashHistory(),
@@ -31,7 +32,12 @@ const router = createRouter({
                     name: 'contexts',
                     path: 'contexts',
                     component: ContextsView
-                }
+                },
+				{
+					name: 'namespaces',
+					path: 'namespaces',
+                    component: NamespacesView
+				}
 			]
 		}
 	]

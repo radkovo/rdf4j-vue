@@ -52,6 +52,7 @@ export default {
 				{label: 'Query', to: {name: 'query'}},
 				{label: 'Explore', to: {name: 'explore'}},
 				{label: 'Contexts', to: {name: 'contexts'}},
+				{label: 'Namespaces', to: {name: 'namespaces'}},
 			]
 		}
 	},
