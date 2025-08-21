@@ -171,9 +171,6 @@ export default {
         async queryAllNamespaces() {
             try {
                 const data = await this.apiClient.getNamespaces();
-                console.log("NS");
-                console.log(data);
-
                 // storing namespaces with corresponding prefixes as tuples
                 for (let index = 0; index < data.results.bindings.length; index++) {
                     this.prefixNsTuples.push({
@@ -181,11 +178,9 @@ export default {
                         'namespace': data.results.bindings[index].namespace.value
                     })
                 }
-                
                 return data;
-
             } catch (e) {
-                    this.$toast.add({ severity: 'error', summary: 'Error', detail: "Error happened during fetch of all namespaces!" });
+                this.$toast.add({ severity: 'error', summary: 'Error', detail: "Error happened during fetch of all namespaces!" });
             }
         },
 
@@ -239,7 +234,7 @@ export default {
                     (this.queryType == "select" && queryResponse.results.bindings.length > 0) ||
                     (this.queryType == "construct" && queryResponse.length > 0) ||
                     (this.queryType == "update" && 'status' in queryResponse)) {
-                    this.$emit('resultReturn', { data: queryResponse, prefixes: this.prefixNsTuples, type: this.queryType });
+                    this.$emit('resultReturn', { total: this.resultsCount, data: queryResponse, prefixes: this.prefixNsTuples, type: this.queryType });
                 } else {
                     // no data found for the query
                     this.$emit('resultReturn', { type: 'clear' });

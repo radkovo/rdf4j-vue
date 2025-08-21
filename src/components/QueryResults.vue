@@ -1,9 +1,9 @@
 <template>
     <div v-if="this.result.type != 'clear'">
         <div v-if="result.type != 'ask' && result.type != 'update'">
-            <DataTable :value="rawValues" responsiveLayout="scroll" :paginator="true" :rows="10"
+            <DataTable :value="rawValues" responsiveLayout="scroll" :paginator="true" paginatorPosition="both" :rows="50"
                 paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
-                :rowsPerPageOptions="[10, 20, 50]" currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+                :rowsPerPageOptions="[50, 200, 500, 1000, 2500]" currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
                 filterDisplay="row" v-model:filters="filters">
                 <template #empty>
                     No data found.
@@ -111,7 +111,7 @@ export default {
         // set needed variables based on the response for its correct visualization
         processResponse() {
             if (this.result) {
-                //console.log('Processing response:', this.result);
+                console.log('Processing response:', this.result);
                 // hide table and ask result
                 this.showUserQueryRes = false;
                 this.askRes = undefined;

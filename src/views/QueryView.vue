@@ -7,6 +7,7 @@
 			Loading...
         </div>
 		<div class="query-results" v-if="!loading">
+			<div class="total-count" v-if="queryResult && queryResult.total">Total {{ queryResult.total }} results</div>
 			<QueryResults v-if="queryResult && !loading" :result="queryResult">
 				<template #value="rdfValue">
 					<RdfValue :data="getValInfo(rdfValue)" :activeIris="true" @show-iri="showIri" />
@@ -79,5 +80,9 @@ export default {
 <style>
 .query-view .query-editor {
 	margin: 0 2em;
+}
+.query-view .total-count {
+	margin: 1em;
+	font-weight: bold;
 }
 </style>
