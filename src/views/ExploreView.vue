@@ -87,20 +87,21 @@ export default {
 
 			if (this.destIri) {
 				this.loading = true;
+				let iri = this.iri;
 				let data;
 				if (this.selMode === 'subject') {
-					data = await this.apiClient.getSubjectDescription(this.destIri);
+					data = await this.apiClient.getSubjectDescription(iri);
                 } else if (this.selMode === 'object') {
-					data = await this.apiClient.getSubjectReferences(this.destIri);
+					data = await this.apiClient.getSubjectReferences(iri);
 				} else {
-					data = await this.apiClient.getSubjectMentions(this.destIri);
+					data = await this.apiClient.getSubjectMentions(iri);
 				}
 				this.queryResult = {
 					data: data, 
 					prefixes: [],
 					type: 'select'
 				};
-				console.log(this.queryResult);
+				//console.log(this.queryResult);
 				this.loading = false;
 			}
 
@@ -111,7 +112,7 @@ export default {
 		},
 
 		async changeIri() {
-			let dec = this.apiClient.getIriDecoder();
+			let dec = await this.apiClient.getIriDecoder();
 			let iri = dec.decodeIri(this.destIri);
 			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri, mode: this.selMode }});
 		}

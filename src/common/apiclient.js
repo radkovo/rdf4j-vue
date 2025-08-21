@@ -43,18 +43,14 @@ export class ApiClient {
 		this.currentRepo = repo;
 		this.cachedNamespaces = null;
 		this.iriDecoder = null;
-		console.log(`Changed repository to ${this.currentRepo}`);
 		await this.getIriDecoder(); // update IriDecoder with current namespaces
-		console.log(`Updated IriDecoder with current namespaces`, this.iriDecoder.namespaces);
 	}
 
 	async login(username, password) {
 		this.serverLogin = username;
 		this.serverPassword = password;
 		this.iriDecoder = null;
-		console.log(`Logged in as ${this.serverLogin}`);
 		await this.getIriDecoder(); // update IriDecoder with current namespaces
-		console.log(`Updated IriDecoder with current namespaces`, this.iriDecoder.namespaces);
 	}
 
     async getSubjectDescription(iri) {
@@ -353,9 +349,9 @@ export class ApiClient {
 			let ns = null;
 			try {
                 let data = await this.getNamespaces();
-				ns = [];
+				ns = {};
 				for (let bind of data.results.bindings) {
-					ns.push({prefix: bind.prefix.value, namespace: bind.namespace.value});
+					ns[bind.prefix.value] = bind.namespace.value;
 				}
             } catch (e) {
                 //throw new Error('Error fetching namespaces:'+ e);

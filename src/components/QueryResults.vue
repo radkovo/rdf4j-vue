@@ -111,7 +111,7 @@ export default {
         // set needed variables based on the response for its correct visualization
         processResponse() {
             if (this.result) {
-                console.log('Processing response:', this.result);
+                //console.log('Processing response:', this.result);
                 // hide table and ask result
                 this.showUserQueryRes = false;
                 this.askRes = undefined;

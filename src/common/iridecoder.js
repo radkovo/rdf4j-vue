@@ -29,10 +29,8 @@ export default class IriDecoder {
 	}
 
 	encodeIri(longForm) {
-		console.log('My namespaces:', this.namespaces);
 		for (let key in this.namespaces) {
 			const iprefix = this.namespaces[key];
-			console.log(iprefix, longForm);
 			if (longForm.indexOf(iprefix) === 0) {
 				return key + ':' + longForm.substring(iprefix.length);
 			}

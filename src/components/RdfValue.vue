@@ -121,7 +121,7 @@ export default {
 					this.displayValue = this.iri;
 					this.displayTooltip = 'Blank node';
 				} else {
-					console.log('Detect: Unknown value type: ', this.data.v);
+					//console.log('Detect: Unknown value type: ', this.data.v);
 					this.detectLiteralType();
 				}
 			} else {

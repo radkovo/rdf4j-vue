@@ -28,9 +28,7 @@ export default {
 	methods: {
 		async update() {
 			let dec = await this.apiClient.getIriDecoder();
-			console.log('IriDecoder ns:', dec.namespaces, this.iri);
 			this.shortForm = dec.encodeIri(this.iri);
-			console.log('ShortForm:', this.shortForm);
 		},
 
 		clicked() {
