@@ -1,15 +1,18 @@
 export default class IriDecoder {
 
+	// Default namespaces, will be extended in constuctor
 	namespaces = {
 		rdf: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#',
 		rdfs: 'http://www.w3.org/2000/01/rdf-schema#',
 		xsd: 'http://www.w3.org/2001/XMLSchema#',
 		owl: 'http://www.w3.org/2002/07/owl#',
-		b: 'http://fitlayout.github.io/ontology/render.owl#',
-		a: 'http://fitlayout.github.io/ontology/segmentation.owl#',
-		fl: 'http://fitlayout.github.io/ontology/fitlayout.owl#',
-		r: 'http://fitlayout.github.io/resource/'
 	};
+
+	constructor(newNamespaces) {
+		if (newNamespaces) {
+            this.namespaces = {...this.namespaces, ...newNamespaces};
+        }
+    }
 
 	decodeIri(shortForm) {
 		const si = shortForm.indexOf(':');
@@ -26,8 +29,10 @@ export default class IriDecoder {
 	}
 
 	encodeIri(longForm) {
+		console.log('My namespaces:', this.namespaces);
 		for (let key in this.namespaces) {
 			const iprefix = this.namespaces[key];
+			console.log(iprefix, longForm);
 			if (longForm.indexOf(iprefix) === 0) {
 				return key + ':' + longForm.substring(iprefix.length);
 			}

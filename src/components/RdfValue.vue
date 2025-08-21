@@ -20,14 +20,13 @@
 <script>
 import RdfIri from './RdfIri.vue';
 
-import IriDecoder from '../common/iridecoder.js';
-
 export default {
 	name: 'RdfValue',
 	components: {
 		RdfIri
 	},
 	emits: ['show-iri', 'hover-iri', 'leave-iri', 'show-ext'],
+	inject: ['apiClient'],
     props: {
         data: {
             type: Object
@@ -89,10 +88,10 @@ export default {
 			return val;
 		},
 
-		literalTooltip() {
+		async literalTooltip() {
 			let s = '';
 			if (this.data.v.datatype) {
-				const dec = new IriDecoder();
+				const dec = await this.apiClient.getIriDecoder();
 				s = '(' + dec.encodeIri(this.data.v.datatype) + ') ';
 			}
 			let val = s + this.data.v.value.toString(); 

@@ -13,6 +13,8 @@ const QUERIES_STORAGE_KEY = 'rdf4j-queries';
 // RDF4J NIL IRI
 const NIL_IRI = 'http://rdf4j.org/schema/rdf4j#nil';
 
+import IriDecoder from './iridecoder.js';
+
 /**
  * A default API client implementation that uses fetch() for connecting the RDF4J server REST API.
  * Saved queries are stored in local storage.
@@ -26,6 +28,9 @@ export class ApiClient {
 	currentRepo = 'default';
 	onNotAuthorized = null;
 
+	cachedNamespaces = null;
+	iriDecoder = null;
+
 	repositoryEndpoint() {
 		return this.serverUrl + '/repositories/' + this.currentRepo;
 	}
@@ -34,14 +39,22 @@ export class ApiClient {
 		this.serverUrl = url;
     }
 
-	setRepository(repo) {
+	async setRepository(repo) {
 		this.currentRepo = repo;
+		this.cachedNamespaces = null;
+		this.iriDecoder = null;
+		console.log(`Changed repository to ${this.currentRepo}`);
+		await this.getIriDecoder(); // update IriDecoder with current namespaces
+		console.log(`Updated IriDecoder with current namespaces`, this.iriDecoder.namespaces);
 	}
 
 	async login(username, password) {
 		this.serverLogin = username;
 		this.serverPassword = password;
-		return await this.listRepositories(); // to check if login was successful
+		this.iriDecoder = null;
+		console.log(`Logged in as ${this.serverLogin}`);
+		await this.getIriDecoder(); // update IriDecoder with current namespaces
+		console.log(`Updated IriDecoder with current namespaces`, this.iriDecoder.namespaces);
 	}
 
     async getSubjectDescription(iri) {
@@ -326,6 +339,30 @@ export class ApiClient {
 		} catch (e) {
 			throw new Error(e);
 		}		
+	}
+
+	async getNamespacesCached() {
+		if (!this.cachedNamespaces) {
+			this.cachedNamespaces = await this.getNamespaces();
+		}
+		return this.cachedNamespaces;
+	}
+
+	async getIriDecoder() {
+		if (!this.iriDecoder) {
+			let ns = null;
+			try {
+                let data = await this.getNamespaces();
+				ns = [];
+				for (let bind of data.results.bindings) {
+					ns.push({prefix: bind.prefix.value, namespace: bind.namespace.value});
+				}
+            } catch (e) {
+                //throw new Error('Error fetching namespaces:'+ e);
+            }
+            this.iriDecoder = new IriDecoder(ns);
+        }
+		return this.iriDecoder;
 	}
 
 	//================================================================================

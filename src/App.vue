@@ -98,7 +98,7 @@ export default {
                 this.authorized = false;
                 this.loading = true;
 				this.apiClient.setServerUrl(this.serverUrl);
-                const status = await this.apiClient.login(this.userid, this.password);
+                await this.apiClient.login(this.userid, this.password);
 				this.authorized = true;
 				//this.userid = '';
 				//this.password = '';

@@ -6,8 +6,6 @@
 </template>
 
 <script>
-import IriDecoder from '../common/iridecoder.js';
-
 export default {
 	name: 'RdfIri',
 	props: {
@@ -15,6 +13,7 @@ export default {
 		active: null
 	},
 	emits: ['show-iri', 'hover-iri', 'leave-iri'],
+	inject: ['apiClient'],
 	data () {
 		return {
 			shortForm: null
@@ -27,9 +26,11 @@ export default {
 		iri: 'update'
 	},
 	methods: {
-		update() {
-			let dec = new IriDecoder();
+		async update() {
+			let dec = await this.apiClient.getIriDecoder();
+			console.log('IriDecoder ns:', dec.namespaces, this.iri);
 			this.shortForm = dec.encodeIri(this.iri);
+			console.log('ShortForm:', this.shortForm);
 		},
 
 		clicked() {

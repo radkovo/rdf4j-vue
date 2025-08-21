@@ -88,7 +88,7 @@ export default {
 	},
 	async created () {
 		this.apiClient = this.$root.apiClient;
-		this.apiClient.setRepository(this.$route.params.repoId);
+		await this.apiClient.setRepository(this.$route.params.repoId);
 		let repos = await this.apiClient.listRepositories();
 		this.repoInfo = repos.find(repo => repo.id === this.$route.params.repoId);
 	},

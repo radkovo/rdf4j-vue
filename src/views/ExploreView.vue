@@ -24,8 +24,6 @@ import QueryResults from '../components/QueryResults.vue';
 import RdfIri from '../components/RdfIri.vue';
 import RdfValue from '../components/RdfValue.vue';
 
-import IriDecoder from '../common/iridecoder.js';
-
 
 export default {
 	name: 'ExploreView',
@@ -80,7 +78,7 @@ export default {
 
 		async update() {
 			if (this.iri) {
-				let dec = new IriDecoder();
+				let dec = await this.apiClient.getIriDecoder();
 				this.destIri = dec.encodeIri(this.iri);
 			} else {
 				this.destIri = '';
@@ -112,8 +110,8 @@ export default {
 			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri, mode: 'any' }});
 		},
 
-		changeIri() {
-			let dec = new IriDecoder();
+		async changeIri() {
+			let dec = this.apiClient.getIriDecoder();
 			let iri = dec.decodeIri(this.destIri);
 			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri, mode: this.selMode }});
 		}

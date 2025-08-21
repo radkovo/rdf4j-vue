@@ -64,8 +64,6 @@ import Message from 'primevue/message';
 
 import {FilterMatchMode} from '@primevue/core/api';
 
-import IriDecoder from '../common/iridecoder.js';
-
 export default {
 	name: 'ContextTable',
 	components: {
@@ -79,11 +77,11 @@ export default {
 		InputText,
 		Message
 	},
+	inject: ['apiClient'],
 	props: {
 	},
 	data () {
 		return {
-			apiClient: this.$root.apiClient,
 			contexts: null,
 			displayEditor: false,
 			editorText: null,
@@ -185,7 +183,7 @@ export default {
 		},
 
 		deleteContext(iri) {
-			let dec = new IriDecoder();
+			let dec = this.apiClient.getIriDecoder();
 			let shortIri = dec.encodeIri(iri);
 			this.$confirm.require({
 				group: 'confirmContext',
