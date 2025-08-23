@@ -19,7 +19,7 @@ import IriDecoder from './iridecoder.js';
  * A default API client implementation that uses fetch() for connecting the RDF4J server REST API.
  * Saved queries are stored in local storage.
  */
-export class ApiClient {
+export default class ApiClient {
 
 	serverUrl = 'http://localhost/rdf4j-server';
 	serverLogin = null;

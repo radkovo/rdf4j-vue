@@ -37,7 +37,7 @@ import Checkbox from 'primevue/checkbox';
 import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 
-import { ApiClient } from './common/apiclient';
+import ApiClient from './common/apiclient';
 
 export default {
     name: 'app',
