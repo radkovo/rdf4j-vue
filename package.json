@@ -15,6 +15,15 @@
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore",
     "prepublishOnly": "npm run build"
   },
+  "exports": {
+    "./apiclient": "./src/common/apiclient.js",
+    "./querylist": "./src/components/QueryList.vue",
+    "./queryresults": "./src/components/QueryResults.vue",
+    "./rdfeditor": "./src/components/RdfEditor.vue",
+    "./rdfiri": "./src/components/RdfIri.vue",
+    "./rdfvalue": "./src/components/RdfValue.vue",
+    "./prefixconfig": "./src/components/PrefixConfig.vue"
+  },
   "dependencies": {
     "events": "^3.3.0",
     "n3": "^1.26.0",
