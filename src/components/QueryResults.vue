@@ -110,6 +110,9 @@ export default {
 
         // set needed variables based on the response for its correct visualization
         processResponse() {
+            this.rawValues = [];
+            this.computedResult = [];
+            this.columns = [];
             if (this.result) {
                 console.log('Processing response:', this.result);
                 // hide table and ask result
