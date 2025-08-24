@@ -14,7 +14,8 @@
     "./queryresults": "./src/components/QueryResults.vue",
     "./rdfeditor": "./src/components/RdfEditor.vue",
     "./rdfiri": "./src/components/RdfIri.vue",
-    "./rdfvalue": "./src/components/RdfValue.vue"
+    "./rdfvalue": "./src/components/RdfValue.vue",
+    "./prefixconfig": "./src/components/PrefixConfig.vue"
   },
   "dependencies": {
     "@primevue/themes": "^4.3.5",
