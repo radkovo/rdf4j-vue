@@ -8,6 +8,14 @@
     "preview": "vite preview",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs --fix --ignore-path .gitignore"
   },
+  "exports": {
+    "./apiclient": "./src/common/apiclient.js",
+    "./querylist": "./src/components/QueryList.vue",
+    "./queryresults": "./src/components/QueryResults.vue",
+    "./rdfeditor": "./src/components/RdfEditor.vue",
+    "./rdfiri": "./src/components/RdfIri.vue",
+    "./rdfvalue": "./src/components/RdfValue.vue"
+  },
   "dependencies": {
     "@primevue/themes": "^4.3.5",
     "events": "^3.3.0",
