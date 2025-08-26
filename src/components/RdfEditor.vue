@@ -323,6 +323,17 @@ export default {
             }
         },
 
+        extractPrefixes(sparqlQuery) {
+            // Regex to capture PREFIX declarations, case-insensitive
+            const regex = /\bPREFIX\s+([a-zA-Z_][\w\-]*)\s*:/gi;
+            let match;
+            const prefixes = [];
+            while ((match = regex.exec(sparqlQuery)) !== null) {
+                prefixes.push(match[1]);
+            }
+            return prefixes;
+        },
+
         // validation of the query typed in by the user 
         validateQuery(code, parser) {
             try {
@@ -382,6 +393,7 @@ export default {
         // automatic completion of prefixes
         searchPrefixesToComplete(code) {
             let newlyFoundPrefs = [];
+            let declaredPrefixes = this.extractPrefixes(code); // the prefixes declared explicitly in the user given query
             if (code.length > 0 && code.match(/([a-z][A-Z][0-9])*\w+/g)) {
                 // search for possible prefixes in the user given query
                 const matched = code.match(/([a-z][A-Z])*\w*:([a-z][A-Z][0-9])*\w+/g);
@@ -392,7 +404,7 @@ export default {
                         const nameSpacePrefixTuple = this.prefixNsTuples.filter(i => i.prefix == prefix)[0];
 
                         // prepare proper html code to visualize prefix in the editor for the user
-                        if (nameSpacePrefixTuple && !newlyFoundPrefs.includes(prefix)) {
+                        if (nameSpacePrefixTuple && !newlyFoundPrefs.includes(prefix) && !declaredPrefixes.includes(prefix)) {
                             // this.alreadyAddedPrefs.push(prefix);
                             newlyFoundPrefs.push(prefix);
                             if (!this.alreadyAddedPrefs.includes(prefix)) {
