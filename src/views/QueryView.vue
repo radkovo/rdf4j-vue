@@ -1,7 +1,7 @@
 <template>
 	<div class="query-view">
 		<div class="query-editor">
-			<RdfEditor @resultReturn="resultsHandler" @loadingResult="loadingStart" />
+			<RdfEditor stateKey="rdf4j-last-query" @resultReturn="resultsHandler" @loadingResult="loadingStart" />
 		</div>
 		<div class="loading-spinner" v-if="loading">
 			Loading...

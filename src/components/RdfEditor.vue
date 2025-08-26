@@ -99,6 +99,12 @@ export default {
     directives: {
         'tooltip': Tooltip
     },
+    props: {
+        stateKey: { // stateKey for saving and loading the last used query in local storage
+            type: String,
+            required: false
+        }
+    },
     data: () => ({
         // syntax highlighted html code representing prefixes in editor 
         htmlCode: [],
@@ -129,10 +135,27 @@ export default {
     mounted() {
         // initial query off all namespaces from the repository
         this.queryAllNamespaces();
+        // load the last used query if available
+        if (this.stateKey) {
+            this.code = localStorage.getItem(this.stateKey) || "";
+        }
+    },
+    watch: {
+        /*code: {
+            deep: true,
+            handler() {
+                this.validateQuery();
+            }
+        }*/
+    },
+    computed: {
+        highlighter() {
+            return this.createHighlighter;
+        }
     },
     methods: {
         // creating syntax highlighted version of the query
-        highlighter(code) {
+        createHighlighter(code) {
             // creation of prefix declarations 
             this.searchPrefixesToComplete(code);
             // visualize prefix declarations in the editor by setting the HTML content
@@ -208,6 +231,28 @@ export default {
 
             let queryResponse;
             if (this.valid && this.queryType !== "empty") {
+                // save the query to local storage
+                if (this.stateKey) {
+                    localStorage.setItem(this.stateKey, this.code);
+                }
+
+                // clear the code editor
+                //this.code = "";
+                this.setPrefixDeclarationsTdInnerHtml();
+
+                // clear previous error
+                this.errorText = "";
+
+                // clear previous results
+                this.$emit('resultReturn', { type: 'clear' });
+
+                // clear previous saved queries
+                this.savedQueriesShown = false;
+                this.selectedQuery = null;
+
+                // clear previous loading indicator
+                this.$emit('loadingResult', false);
+
                 // emit that the fetching of data started, so show spinner
                 this.$emit('loadingResult', true);
 
