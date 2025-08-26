@@ -17,7 +17,7 @@
             </tr>
 
             <tr>
-                <td class="width_95">
+                <td class="editor_container width_95">
                     <prism-editor class="my-editor" v-model="code" :highlight="highlighter" line-numbers></prism-editor>
                 </td>
             </tr>
@@ -494,12 +494,16 @@ export default {
 .font_style {
     font-family: Fira code, Fira Mono, Consolas, Menlo, Courier, monospace;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.2;
 }
 
 .editor_table {
     width: 100%;
     border: 2px solid black;
+    min-height: 30vh;
+}
+
+.editor_container {
     min-height: 20vh;
 }
 
@@ -540,5 +544,6 @@ export default {
 
 .editor_table tr.minimal {
     height: 0;
+    line-height: 1;
 }
 </style>
