@@ -9,8 +9,18 @@
 export default {
 	name: 'RdfIri',
 	props: {
-		iri: null,
-		active: null
+		iri: {
+			// the target IRI
+			type: String,
+            required: true
+		},
+		active: {
+			// whether the IRI should be displayed clickable and the events should be emitted on click, hover, and leave events
+			// when set to false, the IRI will be displayed as a plain text string and the eventual link may be provided
+			// as a parent element
+			type: Boolean,
+            default: false
+		}
 	},
 	emits: ['show-iri', 'hover-iri', 'leave-iri'],
 	inject: ['apiClient'],

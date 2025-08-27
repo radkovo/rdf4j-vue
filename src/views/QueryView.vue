@@ -10,7 +10,13 @@
 			<div class="total-count" v-if="queryResult && queryResult.total">Total {{ queryResult.total }} results</div>
 			<QueryResults v-if="queryResult && !loading" :result="queryResult">
 				<template #value="rdfValue">
-					<RdfValue :data="getValInfo(rdfValue)" :activeIris="true" @show-iri="showIri" />
+					<RdfValue :data="getValInfo(rdfValue)" :activeIris="false">
+						<template #iri="data">
+							<RouterLink class="iri-link" :to="{name: 'explore', params: {iri: data.v.value}}" target="_blank">
+								<RdfIri :iri="data.v.value" :active="false" />
+							</RouterLink>
+						</template>
+					</RdfValue>
 				</template>
 			</QueryResults>
 		</div>
@@ -21,13 +27,15 @@
 import RdfEditor from '../components/RdfEditor.vue';
 import QueryResults from "../components/QueryResults.vue"
 import RdfValue from '../components/RdfValue.vue';
+import RdfIri from '../components/RdfIri.vue';
 
 export default {
 	name: 'QueryView',
 	components: {
 		RdfEditor,
 		QueryResults,
-		RdfValue
+		RdfValue,
+		RdfIri
 	},
 	props: {
 	},
@@ -67,11 +75,6 @@ export default {
 			this.queryResult = r;
 			console.log(r);
 		},
-
-		showIri(iri) {
-            let route = this.$router.resolve({ name: 'explore', params: { repoId: this.$route.params.repoId, iri: iri } });
-            window.open(route.href, '_blank');
-        },
 
 	}
 }

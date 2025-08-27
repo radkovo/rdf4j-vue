@@ -8,7 +8,13 @@
 		</div>
 		<QueryResults v-if="queryResult && !loading" :result="queryResult">
 			<template #value="rdfValue">
-				<RdfValue :data="getValInfo(rdfValue)" :activeIris="true" @show-iri="showIri" />
+				<RdfValue :data="getValInfo(rdfValue)" :activeIris="false">
+					<template #iri="data">
+						<RouterLink class="iri-link" :to="{name: 'explore', params: {iri: data.v.value}}">
+							<RdfIri :iri="data.v.value" :active="false" />
+						</RouterLink>
+					</template>
+				</RdfValue>
 			</template>
 		</QueryResults>
 		
@@ -105,10 +111,6 @@ export default {
 				this.loading = false;
 			}
 
-		},
-
-		showIri(iri) {
-			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri, mode: 'any' }});
 		},
 
 		async changeIri() {

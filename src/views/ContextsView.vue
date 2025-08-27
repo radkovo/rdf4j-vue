@@ -8,7 +8,7 @@
 			showGridlines>
 			<Column header="Context" filterField="iri" field="iri">
 				<template #body="rowdata">
-					<RouterLink :to="{name: 'explore', params: {iri: rowdata.data.iri}}">
+					<RouterLink class="iri-link" :to="{name: 'explore', params: {iri: rowdata.data.iri}}">
 						<RdfIri :iri="rowdata.data.iri" :active="false" />
 					</RouterLink>
 				</template>

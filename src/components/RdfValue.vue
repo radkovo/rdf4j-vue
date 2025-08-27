@@ -6,10 +6,12 @@
 			<a class="iri-link iri font-monospace" v-tooltip.bottom="displayTooltip" @click="() => { showIri(iri); }">{{displayValue}}</a>
 		</span>
 		<span v-if="valueType==='uri'" class="uri-value" :class='typeInfo.type'>
-			<RdfIri :iri="data.v.value" :active="active" 
-				@show-iri="showIri"
-				@hover-iri="hoverIri"
-				@leave-iri="leaveIri" />
+			<slot name="iri" v-bind="data">
+				<RdfIri :iri="data.v.value" :active="active" 
+					@show-iri="showIri"
+					@hover-iri="hoverIri"
+					@leave-iri="leaveIri" />
+			</slot>
 			<span v-if="typeInfo.name" class="badge">{{typeInfo.name}}</span>
 			<i v-if="showExt && extIcon" v-tooltip="extTooltip" class="i-action" :class="extIcon" 
 				style="cursor: pointer" @click="showExternal" />
@@ -46,10 +48,6 @@ export default {
         extTooltip: {
             type: String,
             default: ''
-        },
-        extAll: {
-            type: Boolean,
-            default: false
         },
 		knownTypes: { // prepared for displaying type badges for known types
 			type: Object,
