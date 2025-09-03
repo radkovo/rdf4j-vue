@@ -4,15 +4,20 @@
             <DataTable :value="rawValues" responsiveLayout="scroll" :paginator="true" paginatorPosition="both" :rows="50"
                 paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                 :rowsPerPageOptions="[50, 200, 500, 1000, 2500]" currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-                filterDisplay="row" v-model:filters="filters">
+                filterDisplay="row" v-model:filters="filters" ref="dt">
                 <template #empty>
                     No data found.
                 </template>
                 <template #loading>
                     Loading data. Please wait.
                 </template>
+                <template #header>
+                    <div class="text-end pb-4">
+                        <Button icon="pi pi-external-link" label="Export" @click="exportCSV($event)" />
+                    </div>
+                </template>                
 
-                <Column v-for="(col, i) in columns" :field="col" :header="col" :key="i" :filterField="`${col}f`">
+                <Column v-for="(col, i) in columns" :field="col + 'f'" :header="col" :key="i" :filterField="`${col}f`">
                     <template #body="slotProps">
                         <slot name="value" v-bind="slotProps.data[col]">
                             {{ slotProps.data[col].value }}
@@ -46,6 +51,7 @@
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
+import Button from 'primevue/button';
 
 import { FilterMatchMode } from '@primevue/core/api';
 
@@ -62,7 +68,8 @@ export default {
     components: {
         DataTable,
         Column,
-        InputText
+        InputText,
+        Button
     },
     data() {
         return {
@@ -130,6 +137,7 @@ export default {
                     this.processConstructResult(this.result.data);
                 }
             }
+            console.log('Processed result:', this.rawValues);
         },
 
         // parse the content of the construct query response
@@ -214,6 +222,11 @@ export default {
                 this.rawValues.push(rawRow);
                 this.computedResult.push(answers);
             })
+        },
+
+        // export data to CSV
+        exportCSV(event) {
+            this.$refs.dt.exportCSV();
         }
 
     }
