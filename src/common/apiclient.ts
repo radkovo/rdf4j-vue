@@ -15,45 +15,56 @@ const NIL_IRI = 'http://rdf4j.org/schema/rdf4j#nil';
 
 import IriDecoder from './iridecoder.js';
 
+import type { AskQueryResult, ContextDescription, QueryResult, RdfValue, RdfValueBinding, RepositoryInfo, SavedQuery, SelectQueryResult, UpdateQueryResult } from './types.js';
+import { errMsg } from './utils.js';
+
 /**
  * A default API client implementation that uses fetch() for connecting the RDF4J server REST API.
  * Saved queries are stored in local storage.
  */
 export default class ApiClient {
 
-	serverUrl = 'http://localhost/rdf4j-server';
-	serverLogin = null;
-	serverPassword = null;
+	serverUrl: string = 'http://localhost/rdf4j-server';
+	serverLogin: string | null = null;
+	serverPassword: string | null = null;
 
-	currentRepo = 'default';
-	onNotAuthorized = null;
+	currentRepo: string = 'default';
+	onNotAuthorized: (() => void) | null = null;
 
-	cachedNamespaces = null;
-	iriDecoder = null;
+	cachedNamespaces: SelectQueryResult | null = null;
+	iriDecoder: IriDecoder | null = null;
 
-	repositoryEndpoint() {
+	constructor() {
+	}
+
+	repositoryEndpoint(): string {
 		return this.serverUrl + '/repositories/' + this.currentRepo;
 	}
 
-	setServerUrl(url) {
+	setServerUrl(url: string): void {
 		this.serverUrl = url;
     }
 
-	async setRepository(repo) {
+	async setRepository(repo: string): Promise<void> {
 		this.currentRepo = repo;
 		this.cachedNamespaces = null;
 		this.iriDecoder = null;
 		await this.getIriDecoder(); // update IriDecoder with current namespaces
 	}
 
-	async login(username, password) {
+	/**
+	 * Sets the server login and password for authentication of the requests.
+	 * @param username The username for authentication. If null, authentication is disabled.
+	 * @param password The password for authentication. If null, authentication is disabled.
+	 */
+	async login(username: string | null, password: string | null): Promise<void> {
 		this.serverLogin = username;
 		this.serverPassword = password;
 		this.iriDecoder = null;
 		await this.getIriDecoder(); // update IriDecoder with current namespaces
 	}
 
-    async getSubjectDescription(iri) {
+    async getSubjectDescription(iri: string): Promise<SelectQueryResult> {
 		const query = `
 			SELECT (?s as ?subject) (?p as ?predicate) (?o as ?object) (?g as ?context) WHERE {
 				{
@@ -74,7 +85,7 @@ export default class ApiClient {
 		return await this.selectQuery(query);
 	}
 
-    async getSubjectReferences(iri) {
+    async getSubjectReferences(iri: string): Promise<SelectQueryResult> {
 		const query = `
 			SELECT (?s as ?subject) (?p as ?predicate) (?o as ?object) (?g as ?context) WHERE {
 				{
@@ -95,7 +106,7 @@ export default class ApiClient {
         return await this.selectQuery(query);
 	}
 
-	async getSubjectMentions(iri) {
+	async getSubjectMentions(iri: string): Promise<SelectQueryResult> {
 		const query = `
 			SELECT (?s as ?subject) (?p as ?predicate) (?o as ?object) (?g as ?context) WHERE {
 				{
@@ -151,7 +162,7 @@ export default class ApiClient {
         return await this.selectQuery(query);
 	}
 
-    async getSubjectValue(subjectIri, propertyIri) {
+    async getSubjectValue(subjectIri: string, propertyIri: string): Promise<RdfValue> {
 		const url = this.repositoryEndpoint() + '/subject/' + encodeURIComponent(subjectIri) + '/' + encodeURIComponent(propertyIri);
 		let response = await fetch(url, {
 			method: 'GET',
@@ -162,7 +173,7 @@ export default class ApiClient {
 		return data;
 	}
 
-	async selectQuery(query, limit) {
+	async selectQuery(query: string, limit?: number): Promise<SelectQueryResult> {
 		const qlimit = (limit === undefined) ? QUERY_LIMIT : limit
 		const url = this.repositoryEndpoint() + '?limit=' + qlimit;
 		let response = await fetch(url, {
@@ -176,13 +187,53 @@ export default class ApiClient {
 		this.checkAuth(response);
 		if (!response.ok) {
 			let error = response.status;
-			throw new Error(error);
+			throw new Error('Error ' + error.toString());
 		}
 		const data = await response.json();
 		return data;
 	}
 
-	async updateQuery(query) {
+	async askQuery(query: string, limit?: number): Promise<AskQueryResult> {
+		const qlimit = (limit === undefined) ? QUERY_LIMIT : limit
+		const url = this.repositoryEndpoint() + '?limit=' + qlimit;
+		let response = await fetch(url, {
+			method: 'POST',
+			headers: this.headers({
+				'Content-Type': 'application/sparql-query',
+				'Accept': 'application/json'
+			}),
+			body: query
+		});
+		this.checkAuth(response);
+		if (!response.ok) {
+			let error = response.status;
+			throw new Error('Error ' + error.toString());
+		}
+		const data = await response.json();
+		return data;
+	}
+
+	async constructQuery(query: string, accept: string, limit?: number): Promise<string> {
+		const qlimit = (limit === undefined) ? QUERY_LIMIT : limit
+		const url = this.repositoryEndpoint() + '?limit=' + qlimit;
+		let response = await fetch(url, {
+			method: 'POST',
+			headers: this.headers({
+				'Content-Type': 'application/sparql-query',
+				'Accept': accept
+			}),
+			body: query
+		});
+		this.checkAuth(response);
+		if (!response.ok) {
+			let error = response.status;
+			throw new Error('Error ' + error.toString());
+		}
+		const data = await response.text();
+		return data;
+	}
+
+	async updateQuery(query: string): Promise<UpdateQueryResult> {
 		const url = this.repositoryEndpoint() + '/statements';
 		let response = await fetch(url, {
 			method: 'POST',
@@ -194,12 +245,12 @@ export default class ApiClient {
 		this.checkAuth(response);
 		if (!response.ok) {
 			let error = response.status;
-			throw new Error(error);
+			throw new Error('Error ' + error.toString());
 		}
-		return true;
+		return { success: true };
 	}
 
-	async getContexts() {
+	async getContexts(): Promise<ContextDescription[]> {
 		const url = this.repositoryEndpoint() + '/contexts';
 		let response = await fetch(url, {
 			method: 'GET',
@@ -210,7 +261,7 @@ export default class ApiClient {
 		this.checkAuth(response);
 		if (!response.ok) {
 			let error = response.status;
-			throw new Error(error);
+			throw new Error('Error ' + error.toString());
 		}
 		const resp = await response.json();
 		let ret = [];
@@ -220,7 +271,7 @@ export default class ApiClient {
 		return ret;
 	}
 
-	async exportContext(contextIri, mime, thenFunction) {
+	async exportContext(contextIri: string, mime: string, thenFunction: (blob: Blob) => void) {
 		const url = this.repositoryEndpoint() + '/statements?context=' + encodeURIComponent('<' + contextIri + '>');
 		let response = await fetch(url, {
 			method: 'GET',
@@ -231,12 +282,12 @@ export default class ApiClient {
 		this.checkAuth(response);
 		if (!response.ok) {
 			let error = response.status;
-			throw new Error(error);
+			throw new Error('Error ' + error.toString());
 		}
 		response.blob().then(thenFunction);
 	}
 
-	async replaceContext(contextIri, mime, data) {
+	async replaceContext(contextIri: string, mime: string, data: string): Promise<void> {
 		const url = this.repositoryEndpoint() + '/statements?context=' + encodeURIComponent('<' + contextIri + '>');
 		let response = await fetch(url, {
 			method: 'PUT',
@@ -252,7 +303,7 @@ export default class ApiClient {
 		}
 	}
 
-	async deleteContext(contextIri) {
+	async deleteContext(contextIri: string): Promise<boolean> {
 		const url = this.repositoryEndpoint() + '/statements?context=' + encodeURIComponent('<' + contextIri + '>');
 		let response = await fetch(url, {
 			method: 'DELETE',
@@ -261,13 +312,13 @@ export default class ApiClient {
 		this.checkAuth(response);
 		if (!response.ok) {
 			let error = response.status;
-			throw new Error(error);
+			throw new Error('Error ' + error.toString());
 		}
 		const data = await response.json();
 		return data.status == 'ok';
 	}
 
-	async listRepositories() {
+	async listRepositories(): Promise<RepositoryInfo[]> {
 		const url = this.serverUrl + '/repositories';
 		try {
 			let response = await fetch(url, {
@@ -284,37 +335,17 @@ export default class ApiClient {
 			}
 
 			const data = await response.json();
-			return this.toObjectArray(data.results.bindings);
+			let ret = [];
+			for (let repo of data.bindings) {
+				ret.push({ id: repo.id.value, title: repo.title.value });
+            }
+			return ret;
 		} catch (e) {
-			throw new Error(e);
+			throw new Error(errMsg(e));
 		}		
 	}
 
-	async createRepository(data) {
-		const url = this.repositoryEndpoint();
-		try {
-			let response = await fetch(url, {
-				method: 'PUT',
-				headers: this.headers({
-					'Content-Type': 'application/json'
-				}),
-				body: JSON.stringify(data)
-			});
-
-			this.checkAuth(response);
-			const rdata = await response.json();
-			if (!response.ok) {
-				throw new Error(rdata.message);
-			}
-
-			return rdata;
-
-		} catch (e) {
-			throw new Error(e);
-		}
-	}
-
-	async getNamespaces() {
+	async getNamespaces(): Promise<SelectQueryResult> {
 		const url = this.repositoryEndpoint() + '/namespaces';
 		try {
 			let response = await fetch(url, {
@@ -330,14 +361,14 @@ export default class ApiClient {
 				throw new Error(data.message);
 			}
 
-			const data = await response.json();
+			const data: SelectQueryResult = await response.json();
 			return data;
 		} catch (e) {
-			throw new Error(e);
+			throw new Error(errMsg(e));
 		}		
 	}
 
-	async getNamespacesCached() {
+	async getNamespacesCached(): Promise<SelectQueryResult> {
 		if (!this.cachedNamespaces) {
 			this.cachedNamespaces = await this.getNamespaces();
 		}
@@ -346,9 +377,9 @@ export default class ApiClient {
 
 	async getIriDecoder() {
 		if (!this.iriDecoder) {
-			let ns = null;
+			let ns: { [key: string]: string; } = {};
 			try {
-                let data = await this.getNamespaces();
+                let data: SelectQueryResult = await this.getNamespaces();
 				ns = {};
 				for (let bind of data.results.bindings) {
 					ns[bind.prefix.value] = bind.namespace.value;
@@ -363,7 +394,7 @@ export default class ApiClient {
 
 	//================================================================================
 
-	checkAuth(response) {
+	checkAuth(response: Response): boolean {
 		if (response.status == 401 || response.status == 403) {
 			if (this.onNotAuthorized) {
 				this.onNotAuthorized();
@@ -374,10 +405,10 @@ export default class ApiClient {
 		}
 	}
 
-	headers(headers) {
+	headers(headers?: { [key: string]: string }): { [key: string]: string } {
 		const src = headers ? headers : {};
-		const basicAuth = btoa(this.serverLogin + ':' + this.serverPassword);
-		if (basicAuth) {
+		if (this.serverLogin && this.serverPassword) {
+            const basicAuth = btoa(this.serverLogin + ':' + this.serverPassword);
 			return {
 				...src,
 				'Authorization': 'Basic ' + basicAuth,
@@ -389,10 +420,10 @@ export default class ApiClient {
 
 	//================================================================================
 
-	async getSavedQueries() {
+	async getSavedQueries(): Promise<SavedQuery[]> {
 		let json = localStorage.getItem(QUERIES_STORAGE_KEY);
 		if (json) {
-            let queries = JSON.parse(json);
+            let queries: SavedQuery[] = JSON.parse(json);
 			// assign id to each query
 			queries.forEach((q, i) => {
                 q.id = i + 1;
@@ -403,13 +434,13 @@ export default class ApiClient {
         }
 	}
 
-	async saveQuery(data) {
+	async saveQuery(data: SavedQuery) {
 		let queries = await this.getSavedQueries();
         queries.push(data);
         localStorage.setItem(QUERIES_STORAGE_KEY, JSON.stringify(queries));
 	}
 
-	async deleteQuery(queryId) {
+	async deleteQuery(queryId: number): Promise<void> {
 		let queries = await this.getSavedQueries();
         queries = queries.filter(q => q.id !== queryId);
         localStorage.setItem(QUERIES_STORAGE_KEY, JSON.stringify(queries));
@@ -419,11 +450,11 @@ export default class ApiClient {
 
 	/**
 	 * Transforms an RDF Binding into a JavaScript object.
-	 * @param {*} binding 
-	 * @returns 
+	 * @param {RdfValueBinding} binding 
+	 * @returns An object with properties from the binding.
 	 */
-	toObject(binding) {
-		const obj = {};
+	toObject(binding: RdfValueBinding): object {
+		const obj: {[k: string]: any} = {};
         for (let prop in binding) {
 			let bind = binding[prop];
 			let val;
@@ -446,7 +477,7 @@ export default class ApiClient {
 	 * @param {*} bindings 
 	 * @returns 
 	 */
-	toObjectArray(bindings) {
+	toObjectArray(bindings: RdfValueBinding[]): object[] {
 		return bindings.map(binding => this.toObject(binding));
     }
 

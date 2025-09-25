@@ -24,16 +24,19 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Button from 'primevue/button';
-import DataTable from 'primevue/datatable';
+import DataTable, { type DataTableFilterMeta } from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import ConfirmDialog from 'primevue/confirmdialog';
 
 import {FilterMatchMode} from '@primevue/core/api';
+import type ApiClient from '@/common/apiclient';
+import type { SavedQuery } from '@/common/types';
+import { defineComponent, inject } from 'vue';
 
-export default {
+export default defineComponent({
 	name: 'QueryList',
 	components: {
 		Button,
@@ -42,11 +45,19 @@ export default {
 		Column,
 		ConfirmDialog
 	},
-	inject: ['apiClient'],
     emits: ['select-query', 'use-query'],
 	props: {
 	},
-	data () {
+	setup() {
+		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
+	},
+	data (): {
+		queries: SavedQuery[] | null,
+		selectedRow: SavedQuery | null,
+		dFilters: DataTableFilterMeta
+	} {
 		return {
 			queries: null,
             selectedRow: null,
@@ -64,15 +75,15 @@ export default {
             this.queries = data;
 		},
 
-        selectRow(ev) {
+        selectRow(ev: any) {
             this.$emit('select-query', ev.data);
         },
 
-        useRow(ev) {
+        useRow(ev: any) {
             this.$emit('use-query', ev.data);
         },
 
-		deleteQuery(id, title) {
+		deleteQuery(id: number, title: string) {
 			this.$confirm.require({
 				group: 'confirmDeleteQuery',
                 message: `Are you sure to delete the query '${title}'?`,
@@ -80,9 +91,9 @@ export default {
                 icon: 'pi pi-exclamation-triangle',
                 accept: async () => {
 					try {
-						await this.apiClient.deleteQuery(id);
+						await (this.apiClient as ApiClient).deleteQuery(id);
 						this.$toast.add({severity:'success', summary: 'Success', detail:'Query deleted', life: 3000});
-					} catch (e) {
+					} catch (e: any) {
 						this.$toast.add({severity:'error', summary: 'Error', detail: e.message, life: 5000});
 					}
 					this.update();
@@ -93,7 +104,7 @@ export default {
 		}
 
 	}
-}
+});
 </script>
 
 <style>

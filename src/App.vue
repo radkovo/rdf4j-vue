@@ -30,7 +30,7 @@
     </div>
 </template>
 
-<script>
+<script lang="ts">
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
 import Checkbox from 'primevue/checkbox';
@@ -41,19 +41,30 @@ import ApiClient from './common/apiclient';
 
 export default {
     name: 'app',
-	data() {
-		return {
-			apiClient: null,
-			authorized: false,
-			serverUrl: null,
-			userid: null,
-			password: null,
-			savePassword: false,
+    data(): {
+        apiClient: ApiClient | null,
+        authorized: boolean,
+        serverUrl: string,
+        userid: string | null,
+        password: string | null,
+        savePassword: boolean,
+        error: string | null,
+        loading: boolean,
+        onReload: (() => void) | null
+    } {
+        return {
+            apiClient: null,
+            authorized: false,
+            serverUrl: '',
+            userid: null,
+            password: null,
+            savePassword: false,
 
-			error: null,
-            loading: false
-		}
-	},
+            error: null,
+            loading: false,
+            onReload: null
+        }
+    },
 	components: {
 		Button,
 		InputText,
@@ -67,8 +78,9 @@ export default {
 		//assume authorized because username and password are optional for some servers
 		this.authorized = true;
 		// load server URL from localStorage if available
-		this.serverUrl = localStorage.getItem('rdf4j-serverUrl');
-		if (this.serverUrl) {
+		let serverUrl = localStorage.getItem('rdf4j-serverUrl');
+		if (serverUrl) {
+			this.serverUrl = serverUrl;
 			this.apiClient.setServerUrl(this.serverUrl);
 		} else {
 			this.serverUrl = this.apiClient.serverUrl; // take the api client default server URL
@@ -88,26 +100,28 @@ export default {
 			this.authorized = false;
 		},
 
-        async submitForm(ev) {
+        async submitForm(ev: Event): Promise<void> {
             ev.preventDefault();
             try {
 				localStorage.setItem('rdf4j-serverUrl', this.serverUrl);
-				localStorage.setItem('rdf4j-userId', this.userid);
-				localStorage.setItem('rdf4j-password', this.savePassword ? this.password : '');
+				if (this.userid && this.password) {
+					localStorage.setItem('rdf4j-userId', this.userid);
+					localStorage.setItem('rdf4j-password', this.savePassword ? this.password : '');
+				}
 
                 this.authorized = false;
                 this.loading = true;
-				this.apiClient.setServerUrl(this.serverUrl);
-                await this.apiClient.login(this.userid, this.password);
+				if (this.apiClient) {
+					this.apiClient.setServerUrl(this.serverUrl);
+					await this.apiClient.login(this.userid, this.password);
+				}
 				this.authorized = true;
-				//this.userid = '';
-				//this.password = '';
                 this.loading = false;
 				this.error = null;
 				if (this.onReload) {
                     this.onReload();
                 }
-            } catch (e) {
+            } catch (e: any) {
                 this.loading = false;
                 this.error = 'Error: ' + e.message;
             }

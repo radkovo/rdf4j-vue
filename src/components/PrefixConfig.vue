@@ -9,40 +9,50 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
+import type ApiClient from '@/common/apiclient';
+import type { NamespaceDef } from '@/common/types';
 
-export default {
-	name: 'PrefixConfig',
-	inject: ['apiClient'],
-	props: {
-	},
-	components: {
-		DataTable,
-		Column
-	},
-	data () {
+import { defineComponent, inject } from 'vue';
+
+export default defineComponent({
+    name: 'PrefixConfig',
+	setup() {
 		return {
-			namespaces: [],
+			apiClient: inject('apiClient') as ApiClient
 		}
 	},
-	created () {
-	},
-	mounted () {
-		this.fetchNamespaces();
-	},
-	methods: {
-		async fetchNamespaces() {
-			let ns = [];
-			let data = await this.apiClient.getNamespaces();
-			for (let bind of data.results.bindings) {
-				ns.push({prefix: bind.prefix.value, namespace: bind.namespace.value});
-			}
-			this.namespaces = ns;
-		},
-	}
-}
+    props: {
+    },
+    components: {
+        DataTable,
+        Column
+    },
+    data (): {
+        namespaces: NamespaceDef[]
+    } {
+        return {
+            namespaces: [],
+        }
+    },
+    created () {
+    },
+    mounted () {
+        this.fetchNamespaces();
+    },
+    methods: {
+        async fetchNamespaces() {
+            let ns = [];
+            let data = await this.apiClient.getNamespaces();
+            for (let bind of data.results.bindings) {
+                ns.push({prefix: bind.prefix.value, namespace: bind.namespace.value});
+            }
+            this.namespaces = ns;
+        },
+    }
+})
 </script>
 
 <style>

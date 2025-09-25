@@ -52,14 +52,14 @@
 
 </template>
 
-<script>
+<script lang="ts">
 // import Prism Editor
 import { PrismEditor } from 'vue-prism-editor';
 // import the styles for vue-prism-editor 
 import 'vue-prism-editor/dist/prismeditor.min.css';
 
 // import highlighting library (you can use any library you want just return html string)
-import { highlight, languages } from 'prismjs/components/prism-core';
+import Prism from 'prismjs';
 import 'prismjs/components/prism-clike';
 import 'prismjs/components/prism-javascript';
 // turtle was needed as dependency
@@ -80,10 +80,15 @@ import Dialog from 'primevue/dialog';
 import QueryList from './QueryList.vue';
 
 // Sparql parser to validate query
-import Sparqljs from 'sparqljs';
-import { Popover } from 'primevue';
+import Sparqljs, { type SparqlParser } from 'sparqljs';
+import { Popover, type PopoverMethods } from 'primevue';
 
-export default {
+import { defineComponent, inject } from 'vue';
+import type ApiClient from '@/common/apiclient';
+import type { SavedQuery } from '@/common/types';
+import { errMsg } from '@/common/utils';
+
+export default defineComponent({
     name: 'RdfEditor',
     components: {
         PrismEditor,
@@ -94,7 +99,6 @@ export default {
         Dialog,
         QueryList
     },
-    inject: ['apiClient'],
     emits: ['resultReturn', 'loadingResult'],
     directives: {
         'tooltip': Tooltip
@@ -105,7 +109,24 @@ export default {
             required: false
         }
     },
-    data: () => ({
+	setup() {
+		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
+	},
+    data: (): {
+        htmlCode: { prefix: string, code: string }[],
+        code: string,
+        valid: boolean,
+        errorText: string,
+        prefixNsTuples: { prefix: string, namespace: string }[],
+        parser: SparqlParser,
+        alreadyAddedPrefs: string[],
+        prefixTextDeclarations: { prefix: string, code: string }[],
+        queryName: string,
+        savedQueriesShown: boolean,
+        selectedQuery: SavedQuery | null
+    } => ({
         // syntax highlighted html code representing prefixes in editor 
         htmlCode: [],
         // query entered by user
@@ -122,12 +143,8 @@ export default {
         alreadyAddedPrefs: [],
         // prefix declarations to prepend to the query
         prefixTextDeclarations: [],
-        // type of the query (select, ask, construct, update-insert,delete,...)
-        queryType: "select",
         // name of the query to be saved
         queryName: "",
-        // number of results or -1 when not available
-        resultsCount: -1,
 
         savedQueriesShown: false,
         selectedQuery: null
@@ -155,18 +172,18 @@ export default {
     },
     methods: {
         // creating syntax highlighted version of the query
-        createHighlighter(code) {
+        createHighlighter(code: string) {
             // creation of prefix declarations 
             this.searchPrefixesToComplete(code);
             // visualize prefix declarations in the editor by setting the HTML content
             this.setPrefixDeclarationsTdInnerHtml();
             // 
             // languages.<insert language> to return html with markup 
-            let highlightedCode = highlight(code, languages.sparql);
+            let highlightedCode = Prism.highlight(code, Prism.languages.sparql, 'sparql');
             return highlightedCode;
         },
 
-        showError(lineNo, errorText) {
+        showError(lineNo: number, errorText: string) {
             let lines = document.querySelectorAll('.prism-editor-wrapper .prism-editor__line-number'); // list of line numbers
             for (let i = 0; i < lines.length; i++) {
                 if (i === lineNo - 1) {
@@ -182,12 +199,12 @@ export default {
             this.errorText = errorText; // showing error message
         },
 
-        showErrorPopover(event) {
-            this.$refs.errorPopover.show(event);
+        showErrorPopover(event: any) {
+            (this.$refs.errorPopover as PopoverMethods).show(event);
         },
 
         hideErrorPopover() {
-            this.$refs.errorPopover.hide();
+            (this.$refs.errorPopover as PopoverMethods).hide();
         },
 
         // fetching all namespaces present in the repository
@@ -221,16 +238,9 @@ export default {
 
             // syntax validation
             let queryDescr = this.validateQuery(queryText, this.parser);
-
-            // get the type of query
-            this.queryType = queryDescr.queryType ? queryDescr.queryType.toLowerCase() : "empty";
             console.log(queryDescr);
 
-            // count the results
-            this.resultsCount = await this.countResults(queryDescr);
-
-            let queryResponse;
-            if (this.valid && this.queryType !== "empty") {
+            if (this.valid && queryDescr) {
                 // save the query to local storage
                 if (this.stateKey) {
                     localStorage.setItem(this.stateKey, this.code);
@@ -257,14 +267,51 @@ export default {
                 this.$emit('loadingResult', true);
 
                 try {
-                    if (this.queryType == "update") {
-                        queryResponse = await this.apiClient.updateQuery(queryText);
-                    } else {
-                        queryResponse = await this.apiClient.selectQuery(queryText);
+                    let emptyResult = false;
+                    switch (queryDescr.type) {
+                        case "query":
+                            switch (queryDescr.queryType) {
+                                case "SELECT":
+                                    let resultsCount = await this.countResults(queryDescr); //count the results
+                                    let selectResponse = await this.apiClient.selectQuery(queryText);
+                                    if (selectResponse.results.bindings.length > 0) {
+                                        this.$emit('resultReturn', { total: resultsCount, data: selectResponse, prefixes: this.prefixNsTuples, type: "select" });
+                                    } else {
+                                        emptyResult = true;
+                                    }
+                                    break;
+                                case "CONSTRUCT":
+                                    let constructResponse = await this.apiClient.constructQuery(queryText, 'text/turtle');
+                                    if (constructResponse.length > 0) {
+                                        this.$emit('resultReturn', { total: 1, data: constructResponse, prefixes: this.prefixNsTuples, type: "construct" });
+                                    } else {
+                                        emptyResult = true;
+                                    }
+                                    break;
+                                case "ASK":
+                                    let askResponse = await this.apiClient.askQuery(queryText);
+                                    this.$emit('resultReturn', { total: 1, data: askResponse, prefixes: this.prefixNsTuples, type: "ask" });
+                                    break;
+                                case "DESCRIBE":
+                                    this.$toast.add({ severity: 'error', summary: 'Error', detail: 'Unsupported query type!' });
+                                    return;
+                            }
+                            break;
+                        case "update":
+                            let updateResponse = await this.apiClient.updateQuery(queryText);
+                            this.$emit('resultReturn', { total: 1, data: updateResponse, prefixes: this.prefixNsTuples, type: "update" });
+                            break;
                     }
+
+                    if (emptyResult) {
+                        // no data found for the query
+                        this.$emit('resultReturn', { type: 'clear' });
+                        this.$toast.add({ severity: 'warn', summary: 'Warn Message', detail: 'Query was successful but no data found!', life: 5000 });
+                    }
+
                 } catch (e) {
                     console.log(e);
-                    let message = e.message;
+                    let message = errMsg(e);
                     if (message.startsWith("4")) {
                         message = "Query execution failed (" + message + " - Server Error)";
                     }
@@ -274,56 +321,45 @@ export default {
                 // emit that the fetching of data ended, so hide spinner
                 this.$emit('loadingResult', false);
 
-                // emit answer if everything was OK and data was found
-                if ((this.queryType == "ask" && 'boolean' in queryResponse) ||
-                    (this.queryType == "select" && queryResponse.results.bindings.length > 0) ||
-                    (this.queryType == "construct" && queryResponse.length > 0) ||
-                    (this.queryType == "update" && 'status' in queryResponse)) {
-                    this.$emit('resultReturn', { total: this.resultsCount, data: queryResponse, prefixes: this.prefixNsTuples, type: this.queryType });
-                } else {
-                    // no data found for the query
-                    this.$emit('resultReturn', { type: 'clear' });
-                    this.$toast.add({ severity: 'warn', summary: 'Warn Message', detail: 'Query was successful but no data found!', life: 5000 });
-                }
             }
 
         },
 
         // Counts the number of results for select queries 
-        async countResults(queryDescr) {
-            if (queryDescr.queryType === "SELECT") {
-                // clone the query functions to avoid modifying the original
-                let cntQuery = { ...queryDescr };
-                // modify the cloned query to count results
-                cntQuery.variables = [
-                    {
-                        expression: {
-                            expression: new Sparqljs.Wildcard(),
-                            type: "aggregate",
-                            aggregation: "count",
-                            distinct: queryDescr.distinct ? true : false,
-                        },
-                        variable: {
-                            termType: "Variable",
-                            value: "count"
+        async countResults(queryDescr: Sparqljs.SelectQuery): Promise<number> {
+            // clone the query functions to avoid modifying the original
+            let cntQuery: Sparqljs.SelectQuery = { ...queryDescr };
+            // modify the cloned query to count results
+            cntQuery.variables = [
+                {
+                    expression: {
+                        expression: new Sparqljs.Wildcard(),
+                        type: "aggregate",
+                        aggregation: "count",
+                        distinct: queryDescr.distinct ? true : false,
+                    },
+                    variable: {
+                        termType: "Variable",
+                        value: "count",
+                        equals(other: Sparqljs.Term | null | undefined): boolean {
+                            if (!other || other.termType!== "Variable") { return false; }
+                            return other.value === "count";
                         }
                     }
-                ];
-                console.log('cntQuery', cntQuery);
-                let generator = new Sparqljs.Generator();
-                console.log('origQueryStr', generator.stringify(queryDescr));
-                let cntQueryStr = generator.stringify(cntQuery);
-                console.log('cntQueryStr', cntQueryStr);
-                let result = await this.apiClient.selectQuery(cntQueryStr);
-                console.log(result);
-                // return the count of results
-                return result.results.bindings[0].count.value;
-            } else {
-                return -1; //don't know
-            }
+                }
+            ];
+            console.log('cntQuery', cntQuery);
+            let generator = new Sparqljs.Generator();
+            console.log('origQueryStr', generator.stringify(queryDescr));
+            let cntQueryStr = generator.stringify(cntQuery);
+            console.log('cntQueryStr', cntQueryStr);
+            let result = await this.apiClient.selectQuery(cntQueryStr);
+            console.log(result);
+            // return the count of results
+            return parseInt(result.results.bindings[0].count.value);
         },
 
-        extractPrefixes(sparqlQuery) {
+        extractPrefixes(sparqlQuery: string): string[] {
             // Regex to capture PREFIX declarations, case-insensitive
             const regex = /\bPREFIX\s+([a-zA-Z_][\w\-]*)\s*:/gi;
             let match;
@@ -335,7 +371,7 @@ export default {
         },
 
         // validation of the query typed in by the user 
-        validateQuery(code, parser) {
+        validateQuery(code: string, parser: SparqlParser): Sparqljs.SparqlQuery | null {
             try {
                 // syntax validation by parser
                 let ret = parser.parse(code);
@@ -345,25 +381,26 @@ export default {
             } catch (error) {
                 // parsing the number of the line on which the error is
                 // from the error.message 
-                let errorText = error.message;
+                let errorText = errMsg(error);
                 const nthIndxOfSpace = this.nthIndex(errorText, ' ', 4) + 1;
                 const indxOfColon = errorText.indexOf(':');
                 const rowNumWithError = errorText.substring(nthIndxOfSpace, indxOfColon);
                 console.log('rowNumWithError' + rowNumWithError + " [[" + errorText);
                 // handling if in the error.message the line number is not specified
-                if (!isNaN(rowNumWithError)) {
+                if (!isNaN(parseInt(rowNumWithError))) {
                     // line number is present
                     this.showError(parseInt(rowNumWithError), errorText);
                     this.$toast.add({ severity: 'error', summary: 'Error Message', detail: 'Query contains error!', life: 3000 });
                 } else {
                     this.$toast.add({ severity: 'error', summary: 'Error Message', detail: 'Query contains error: ' + errorText });
                 }
+                return null;
             }
         },
 
         // searching for the nth occurrence of pattern in string
         // returns index of the occurrence
-        nthIndex(str, pat, n) {
+        nthIndex(str: string, pat: string, n: number) {
             var L = str.length, i = -1;
             while (n-- && i++ < L) {
                 i = str.indexOf(pat, i);
@@ -372,27 +409,9 @@ export default {
             return i;
         },
 
-        // checking if server response contains error
-        async errorHandler(res) {
-            if (!res.ok) {
-                // something went wrong on server (status like: 4xx or 5xx, ...)
-                this.$toast.add({ severity: 'error', summary: 'Error', detail: "Error occurred during execution", life: 3000 });
-                return null;
-            } else {
-
-                this.$toast.add({ severity: 'success', summary: 'Success Message', detail: 'Query was successfully executed', life: 3000 });
-                if (this.queryType != "construct") {
-                    return await res.json();
-                } else {
-                    return await res.text();
-                }
-
-            }
-        },
-
         // automatic completion of prefixes
-        searchPrefixesToComplete(code) {
-            let newlyFoundPrefs = [];
+        searchPrefixesToComplete(code: string): void {
+            let newlyFoundPrefs: string[] = [];
             let declaredPrefixes = this.extractPrefixes(code); // the prefixes declared explicitly in the user given query
             if (code.length > 0 && code.match(/([a-z][A-Z][0-9])*\w+/g)) {
                 // search for possible prefixes in the user given query
@@ -414,15 +433,13 @@ export default {
                                     "code": "PREFIX " + prefix + ": <" + nameSpacePrefixTuple.namespace + ">"
                                 })
                                 // highlight the html code
-                                let highlightedCode = highlight("PREFIX " + prefix + ": <" + nameSpacePrefixTuple.namespace
-                                    + ">", languages.sparql);
+                                let highlightedCode = Prism.highlight("PREFIX " + prefix + ": <" + nameSpacePrefixTuple.namespace + ">", Prism.languages.sparql, 'sparql');
                                 this.htmlCode.push({
                                     "prefix": prefix,
                                     "code": highlightedCode
                                 });
                             }
                         }
-
                     })
 
                     // control which previous prefixes are not present in the query
@@ -454,7 +471,10 @@ export default {
                 if (this.htmlCode.length > 0) {
                     // set the inner HTML of the td = show the namespace with prefix to the user
                     this.htmlCode.forEach((e, i) => {
-                        document.getElementById('td-' + (i)).innerHTML = e.code;
+                        let td = document.getElementById('td-' + (i));
+                        if (td) {
+                            td.innerHTML = e.code;
+                        }
                     });
                 }
             })
@@ -467,7 +487,7 @@ export default {
                     await this.apiClient.saveQuery({ title: this.queryName, queryString: this.code });
                     this.$toast.add({ severity: 'success', summary: 'Success', detail: `Query "${this.queryName}" was successfully saved!`, life: 3000 });
                 } catch (e) {
-                    this.$toast.add({ severity: 'error', summary: 'Error', detail: e.message, life: 5000 });
+                    this.$toast.add({ severity: 'error', summary: 'Error', detail: errMsg(e), life: 5000 });
                 }
             } else {
                 if (this.queryName.length == 0) {
@@ -483,16 +503,16 @@ export default {
             }
         },
 
-        selectQuery(q) {
+        selectQuery(q: SavedQuery): void {
             this.selectedQuery = q;
         },
 
-        useQuery(q) {
+        useQuery(q: SavedQuery): void {
             this.selectedQuery = q;
             this.loadQuery();
         },
 
-        loadQuery() {
+        loadQuery(): void {
             if (this.selectedQuery) {
                 this.code = this.selectedQuery.queryString;
                 this.queryName = this.selectedQuery.title;
@@ -502,7 +522,7 @@ export default {
 
 
     },
-};
+});
 </script>
 
 <style>

@@ -7,9 +7,10 @@
 	</router-link>
 </template>
 
-<script>
+<script lang="ts">
+import { defineComponent } from 'vue';
 
-export default {
+export default defineComponent({
 	name: 'LinkButton',
 	props: {
 		to: null,
@@ -29,7 +30,7 @@ export default {
 			return this.label ? this.label : '&nbsp;';
 		}
 	}
-}
+});
 </script>
 
 <style>

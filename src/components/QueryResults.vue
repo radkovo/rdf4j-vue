@@ -1,5 +1,5 @@
 <template>
-    <div v-if="this.result.type != 'clear'">
+    <div v-if="result.type != 'clear'">
         <div v-if="result.type != 'ask' && result.type != 'update'">
             <DataTable :value="rawValues" responsiveLayout="scroll" :paginator="true" paginatorPosition="both" :rows="50"
                 paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
@@ -13,7 +13,7 @@
                 </template>
                 <template #header>
                     <div class="text-end pb-4">
-                        <Button icon="pi pi-external-link" label="Export" @click="exportCSV($event)" />
+                        <Button icon="pi pi-external-link" label="Export" @click="exportCSV" />
                     </div>
                 </template>                
 
@@ -34,7 +34,6 @@
         </div>
         <div v-else-if="result.type == 'ask'">
             <!--Boolean result -->
-
             <h3>The result of query is: {{ askRes ? "Yes" : "No" }}</h3>
             <i v-if="askRes" class="pi pi-check" style="color:green; font-weight:bold"></i>
             <i v-else class="pi pi-times" style="color:red; font-weight:bold"></i>
@@ -47,21 +46,26 @@
     </div>
 </template>
 
-<script>
-import DataTable from 'primevue/datatable';
+<script lang="ts">
+import DataTable, { type DataTableFilterMeta, type DataTableMethods } from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 
 import { FilterMatchMode } from '@primevue/core/api';
 
-import { Parser } from "n3";
+import { Parser, Quad, type Term, type Quad_Subject } from "n3";
+import { defineComponent, type PropType } from 'vue';
+import type { RdfValue, RdfValueBinding, QueryResult, SelectQueryResult, NamespaceDef } from '@/common/types';
 
-export default {
+// parser for N3 construct queries 
+const n3Parser = new Parser({ format: 'N-Triples' })
+
+export default defineComponent({
     name: 'QueryResults',
     props: {
         result: {
-            type: Object, // object with data such as { data: { head: {}, results: {} }, prefixes: [], type: 'select' }
+            type: Object as PropType<QueryResult>,
             required: true
         }
     },
@@ -71,12 +75,17 @@ export default {
         InputText,
         Button
     },
-    data() {
+    data(): {
+        rawValues: RdfValueBinding[],
+        columns: string[],
+        showUserQueryRes: boolean,
+        resource: string | null,
+        filters: DataTableFilterMeta,
+        askRes: boolean | undefined
+    } {
         return {
             // raw values
             rawValues: [],
-            // data for the rows in the table
-            computedResult: [],
             // name of columns in the table
             columns: [],
             // show the table if data is available
@@ -91,8 +100,6 @@ export default {
         }
     },
     mounted() {
-        // parser for N3 construct queries 
-        this.n3Parser = new Parser({ format: 'N-Triples' })
         this.processResponse();
     },
 	watch: {
@@ -100,7 +107,7 @@ export default {
 	},
     methods: {
         // function activating resource exploration component
-        exploreResource(resource) {
+        exploreResource(resource: string) {
             this.filters = {};
             // base column filter
             this.filters['global'] = { value: null, matchMode: FilterMatchMode.CONTAINS };
@@ -111,14 +118,9 @@ export default {
                 this.showUserQueryRes = true;
         },
 
-        clearFilter() {
-            this.filter = {};
-        },
-
         // set needed variables based on the response for its correct visualization
         processResponse() {
             this.rawValues = [];
-            this.computedResult = [];
             this.columns = [];
             if (this.result) {
                 console.log('Processing response:', this.result);
@@ -126,112 +128,127 @@ export default {
                 this.showUserQueryRes = false;
                 this.askRes = undefined;
 
-                if (this.result.type == "ask") {
+                if (this.result.type == 'ask') {
                     // ASK query 
                     this.askRes = this.result.data.boolean;
-                } else if (this.result.type == "select") {
+                } else if (this.result.type == 'select') {
                     // SELECT query   
-                    this.processSelectResult(this.result.data);
-                } else if (this.result.type == "construct") {
+                    this.processSelectResult(this.result);
+                } else if (this.result.type == 'construct') {
                     // CONSTRUCT query
-                    this.processConstructResult(this.result.data);
+                    this.processConstructResult(this.result);
                 }
             }
             console.log('Processed result:', this.rawValues);
         },
 
         // parse the content of the construct query response
-        processConstructResult(res) {
+        processConstructResult(res: Extract<QueryResult, { type: "construct" }>) {
             // store column headers 
-            ['subject', 'predicate', 'object'].forEach((item) => {
-                this.columns.push(
-                    item
-                );
-                // store filter options for columns 
-                this.filters[item + 'f'] = { value: null, matchMode: FilterMatchMode.CONTAINS };
-            })
+            this.columns = ['subject', 'predicate', 'object', 'context'];
+            this.filters['subjectf'] = { value: null, matchMode: FilterMatchMode.CONTAINS };
+            this.filters['predicatef'] = { value: null, matchMode: FilterMatchMode.CONTAINS };
+            this.filters['objectf'] = { value: null, matchMode: FilterMatchMode.CONTAINS };
+            this.filters['contextf'] = { value: null, matchMode: FilterMatchMode.CONTAINS };
 
             // loop processing response and transforming it to row data  
             // parse the n-triples data from the answer
-            this.n3Parser.parse(
-                res,
+            n3Parser.parse(
+                res.data,
                 (error, quad, prefixes) => {
+                    let q: Quad = quad;
                     // one quad represents one triple from teh answer
                     if (quad) {
-                        let answers = {};
-                        // construct data object for each column in the row
-                        ['_subject', '_predicate', '_object'].forEach(item => {
-                            // for column data store : value(with prefix), tooltip(with full URI), type(literal/uri/...)
-                            let word = { 'val': quad[item].id, 'tol': quad[item].id, 'type': 'uri' };
-
-                            // replace namespace with prefix if present
-                            this.result.prefixes.forEach((el) => {
-                                word.val = word.val.replace(el.namespace, el.prefix + ':');
-                            })
-
-                            // store column data
-                            answers[item.substring(1,)] = word;
-                            answers[item.substring(1,) + 'f'] = word.val;
-
-                        })
-                        // store row data
-                        this.computedResult.push(answers);
+                        let rawRow: RdfValueBinding = {
+                            'subject': this.transformQuadPart(q.subject),
+                            'predicate': this.transformQuadPart(q.predicate),
+                            'object': this.transformQuadPart(q.object),
+                            'context': this.transformQuadPart(q.graph),
+                            'subjectf': this.formatQuadPart(q.subject, res.prefixes),
+                            'predicatef': this.formatQuadPart(q.predicate, res.prefixes),
+                            'objectf': this.formatQuadPart(q.object, res.prefixes),
+                            'contextf': this.formatQuadPart(q.graph, res.prefixes),
+                        }
+                        this.rawValues.push(rawRow);
                     }
                 });
         },
 
+        /**
+         * Transforms a quad part into a binding object with the appropriate type and datatype
+         */
+        transformQuadPart(term: Term): RdfValue {
+            switch (term.termType) {
+                case 'Literal':
+                    return {
+                        type: 'literal',
+                        value: term.value,
+                        datatype: term.datatype.value
+                    };
+                case 'NamedNode':
+                    return {
+                        type: 'uri',
+                        value: term.value,
+                    };
+                default:
+                    return {
+                        type: 'literal',
+                        value: term.value,
+                    };
+            }    
+        },
+
+        /**
+         * Formats a quad part into a string usable for searching and sorting
+         */
+        formatQuadPart(term: Term, prefixes: NamespaceDef[]): RdfValue {
+            let val = term.toString();
+            // replace namespace with prefix if present
+            prefixes.forEach((el) => {
+                val = val.replace(el.namespace, el.prefix + ':');
+            })
+            return { value: val, type: 'literal' };
+        },
+
         // parse the content of the select query response
-        processSelectResult(res) {
+        processSelectResult(res: Extract<QueryResult, { type: "select" }>) {
             // store column headers 
-            res.head.vars.forEach((item) => {
+            res.data.head.vars.forEach((item) => {
                 this.columns.push(
                     item
                 );
                 this.filters[item + 'f'] = { value: null, matchMode: FilterMatchMode.CONTAINS };
             })
             // loop processing response and transforming it to row data  
-            res.results.bindings.forEach((element) => {
-                let answers = {};
-                let rawRow = {};
+            res.data.results.bindings.forEach((element) => {
+                let rawRow: RdfValueBinding = {};
                 // process one row data
                 this.columns.forEach((item) => {
                     if (element[item]) {
                         rawRow[item] = element[item];
 
-                        // for column data store : value(with prefix), tooltip(with full URI), type(literal/uri/...)
-                        let word = { 'val': element[item].value, 'tol': element[item].value, 'type': element[item].type };
-
+                        // the value that will be used for filtering and sorting
+                        let val = element[item].value;
                         // replace namespace with prefix if present
-                        this.result.prefixes.forEach((el) => {
-                            word.val = word.val.replace(el.namespace, el.prefix + ':');
+                        res.prefixes.forEach((el) => {
+                            val = val.replace(el.namespace, el.prefix + ':');
                         })
-
-                        // transform value if literal is the actual item, add datatype to value
-                        if (element[item].type !== 'uri' && element[item].datatype) {
-                            word.tol = '"' + word.val + '"^^xsd:' + element[item].datatype.substring(element[item].datatype.indexOf("#") + 1);
-                        }
-
-                        // store column data
-                        answers[item] = word;
-                        answers[item + 'f'] = word.val;
-                        rawRow[item + 'f'] = word.val;
-
+                        rawRow[item + 'f'] = { value: val, type: 'literal' };
                     }
                 })
                 // store row data
                 this.rawValues.push(rawRow);
-                this.computedResult.push(answers);
             })
         },
 
         // export data to CSV
-        exportCSV(event) {
-            this.$refs.dt.exportCSV();
+        exportCSV() {
+            (this.$refs.dt as DataTableMethods).exportCSV();
         }
 
     }
 
-}
+});
 </script>
 
 <style>

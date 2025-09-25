@@ -30,33 +30,40 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import Menubar from 'primevue/menubar';
 import Button from 'primevue/button';
+import type { MenuItem } from 'primevue/menuitem';
+import type ApiClient from '@/common/apiclient';
 
 import { computed } from 'vue';
+import type { RepositoryInfo } from '@/common/types';
 
 export default {
-	name: 'RepositoryView',
-	components: {
-		Menubar,
-		Button,
-	},
-	data() {
-		return {
-			apiClient: this.$root.apiClient,
-			repoInfo: null,
+    name: 'RepositoryView',
+    components: {
+        Menubar,
+        Button,
+    },
+    data(): {
+        apiClient: ApiClient | null,
+        repoInfo: RepositoryInfo | null,
+        menuItems: MenuItem[]
+    } {
+        return {
+            apiClient: (this.$root as any).apiClient,
+            repoInfo: null,
 
-			menuItems: [
-				//{label: 'Overview', to: {name: 'repo'}},
-				{label: 'Query', to: {name: 'query'}},
-				{label: 'Explore', to: {name: 'explore'}},
-				{label: 'Contexts', to: {name: 'contexts'}},
-				{label: 'Namespaces', to: {name: 'namespaces'}},
-			]
-		}
-	},
-	provide() {
+            menuItems: [
+                //{label: 'Overview', to: {name: 'repo'}},
+                {label: 'Query', to: {name: 'query'}},
+                {label: 'Explore', to: {name: 'explore'}},
+                {label: 'Contexts', to: {name: 'contexts'}},
+                {label: 'Namespaces', to: {name: 'namespaces'}},
+            ]
+        }
+    },
+    provide() {
 		return {
 			apiClient: this.apiClient,
 			repoInfo: computed(() => this.repoInfo),
@@ -87,10 +94,27 @@ export default {
 	watch: {
 	},
 	async created () {
-		this.apiClient = this.$root.apiClient;
-		await this.apiClient.setRepository(this.$route.params.repoId);
+		this.apiClient = (this.$root as any).apiClient;
+		if (!this.apiClient) {
+            throw new Error('API client not found. It should be provided in the root Vue instance.');
+        }
+		let repoId = this.$route.params.repoId;
+		if (Array.isArray(repoId)) {
+			if (repoId.length > 0) {
+            	repoId = repoId[0];
+			} else {
+				this.$router.push({name: 'home'}); // no repository found, redirect to home page
+				repoId = 'default';
+			}
+        }
+		await this.apiClient.setRepository(repoId);
 		let repos = await this.apiClient.listRepositories();
-		this.repoInfo = repos.find(repo => repo.id === this.$route.params.repoId);
+		let repoInfo = repos.find(repo => repo.id === repoId);
+		if (repoInfo) {
+			this.repoInfo = repoInfo;
+		} else {
+			this.$router.push({name: 'home'}); // no such repository found, redirect to home page
+        }
 	},
 	methods: {
 

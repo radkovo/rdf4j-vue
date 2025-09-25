@@ -5,8 +5,11 @@
 	<span class="iri font-monospace" v-if="!active" v-tooltip.bottom="iri">{{ shortForm }}</span>
 </template>
 
-<script>
-export default {
+<script lang="ts">
+import type ApiClient from '@/common/apiclient';
+import { defineComponent, inject } from 'vue';
+
+export default defineComponent({
 	name: 'RdfIri',
 	props: {
 		iri: {
@@ -23,10 +26,14 @@ export default {
 		}
 	},
 	emits: ['show-iri', 'hover-iri', 'leave-iri'],
-	inject: ['apiClient'],
+	setup() {
+		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
+	},
 	data () {
 		return {
-			shortForm: null
+			shortForm: ''
 		}
 	},
 	created () {
@@ -53,7 +60,7 @@ export default {
 			this.$emit('leave-iri', this.iri);
 		}
 	}
-}
+})
 </script>
 
 <style>

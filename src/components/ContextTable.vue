@@ -51,7 +51,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import SplitButton from 'primevue/splitbutton';
@@ -63,8 +63,13 @@ import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 
 import {FilterMatchMode} from '@primevue/core/api';
+import type { ContextDescription } from '@/common/types';
+import type { MenuItem } from 'primevue/menuitem';
+import type ApiClient from '@/common/apiclient';
 
-export default {
+import { defineComponent, inject } from 'vue';
+
+export default defineComponent({
 	name: 'ContextTable',
 	components: {
 		DataTable,
@@ -77,10 +82,20 @@ export default {
 		InputText,
 		Message
 	},
-	inject: ['apiClient'],
-	props: {
+	setup() {
+		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
 	},
-	data () {
+	data (): {
+		contexts: ContextDescription[] | null,
+		displayEditor: boolean,
+		editorText: string | null,
+		editorError: string | null,
+		editIri: string | null,
+		filters: any,
+		serviceMenu: MenuItem[]
+	} {
 		return {
 			contexts: null,
 			displayEditor: false,
@@ -92,14 +107,7 @@ export default {
                 'iri': {value: null, matchMode: FilterMatchMode.CONTAINS}
             },			
 
-			serviceMenu: [
-				{
-					label: 'Re-initialize metadata contexts',
-					command: async () => {
-						await this.reinitMetadata();
-					}
-				}
-			]
+			serviceMenu: [] // for future extensions
 		}
 	},
 	created () {
@@ -114,11 +122,11 @@ export default {
 			this.contexts = await this.apiClient.getContexts();
 		},
 
-		exportDefault(iri) {
+		exportDefault(iri: string) {
 			this.exportContext(iri, 'application/rdf+xml', '.rdf');
 		},
 
-		createExportMenu(iri) {
+		createExportMenu(iri: string): MenuItem[] {
 			let items = [];
 			// add standard RDF serializations
 			items.push(
@@ -150,7 +158,8 @@ export default {
 			this.displayEditor = true;
 			this.editorError = null;
 		},
-		editContext(iri) {
+
+		editContext(iri: string) {
 			let me = this;
 			this.editIri = iri;
 			this.editorError = null;
@@ -159,20 +168,26 @@ export default {
 				me.displayEditor = true;
 			});
 		},
+
 		closeEditor() {
 			this.displayEditor = false;
 		},
+		
 		async saveEditor() {
 			try {
-				await this.apiClient.replaceContext(this.editIri, 'text/turtle', this.editorText);
-				this.displayEditor = false;
-				this.update();
+				if (this.editIri && this.editorText) {
+					await this.apiClient.replaceContext(this.editIri, 'text/turtle', this.editorText);
+					this.displayEditor = false;
+					this.update();
+				}
 			} catch (error) {
-				this.editorError = error.message;
+				if (error instanceof Error) {
+					this.editorError = error.message;
+				}
 			}
 		},
 
-		exportContext(iri, mime, ext) {
+		exportContext(iri: string, mime: string, ext: string) {
 			this.apiClient.exportContext(iri, mime, function(blob) {
 				const link = document.createElement('a');
 				link.href = URL.createObjectURL(blob);
@@ -182,8 +197,8 @@ export default {
 			});
 		},
 
-		deleteContext(iri) {
-			let dec = this.apiClient.getIriDecoder();
+		async deleteContext(iri: string) {
+			let dec = await this.apiClient.getIriDecoder();
 			let shortIri = dec.encodeIri(iri);
 			this.$confirm.require({
 				group: 'confirmContext',
@@ -192,7 +207,7 @@ export default {
                 icon: 'pi pi-exclamation-triangle',
                 accept: async () => {
 					try {
-						this.artifact = await this.apiClient.deleteContext(iri);
+						await this.apiClient.deleteContext(iri);
 					} catch (error) {
 						console.error('Couldnt delete context!', error);
 					}
@@ -203,26 +218,7 @@ export default {
             });
 		},
 
-		async reinitMetadata() {
-			this.$confirm.require({
-				group: 'confirmContext',
-                message: 'This will replace the metadata contexts by their default contents. Proceed?',
-                header: 'Re-initialize metadata',
-                icon: 'pi pi-exclamation-triangle',
-                accept: async () => {
-					try {
-						await this.apiClient.forceInitMetadata();
-					} catch (error) {
-						console.error('Error!', error);
-					}
-					this.update();
-                },
-                reject: () => {
-                }
-            });
-		},
-
-		findNewContextName() {
+		findNewContextName(): string {
 			let n = 1;
 			let cname = '';
 			do {
@@ -232,17 +228,19 @@ export default {
 			return cname;
 		},
 
-		contextExists(iri) {
-			for (let ctx of this.contexts) {
-				if (ctx.iri === iri) {
-					return true;
+		contextExists(iri: string): boolean {
+			if (this.contexts) {
+				for (let ctx of this.contexts) {
+					if (ctx.iri === iri) {
+						return true;
+					}
 				}
 			}
 			return false;
 		}
 
 	}
-}
+});
 </script>
 
 <style>

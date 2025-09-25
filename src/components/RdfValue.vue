@@ -19,23 +19,28 @@
 	</span>
 </template>
 
-<script>
+<script lang="ts">
+import type ApiClient from '@/common/apiclient';
 import RdfIri from './RdfIri.vue';
 
-export default {
+import { defineComponent, inject, type PropType } from 'vue';
+import type {  DisplayValue } from '@/common/types';
+
+export default defineComponent({
 	name: 'RdfValue',
 	components: {
 		RdfIri
 	},
 	emits: ['show-iri', 'hover-iri', 'leave-iri', 'show-ext'],
-	inject: ['apiClient'],
+	setup() {
+		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
+	},
     props: {
         data: {
-            type: Object
-			// The object should contain at least 'v' (RDF value) property with 'value' and 'type' properties
-			// Example: { v: { value: 'http://example.org/resource/123', type: 'uri' } }
-			// Optionally the 's' (subject) property and 'p' (predicate) properties can be provided for
-			// better visualization in alternative implementations
+            type: Object as PropType<DisplayValue>,
+			required: true
         },
         activeIris: {
             type: Boolean,
@@ -54,18 +59,27 @@ export default {
             default: {}
 		}
     },
-	data () {
-		return {
-			valueType: null,
-			iri: null,
-			active: false,
-			showExt: false,
-			typeIri: null,
-			displayValue: null,
-			displayStyle: null,
-			displayTooltip: null
-		}
-	},
+    data (): {
+        valueType: string | null,
+        iri: string,
+        active: boolean,
+        showExt: boolean,
+        typeIri: string | null,
+        displayValue: string | null,
+        displayStyle: string | null,
+        displayTooltip: string | null
+    } {
+        return {
+            valueType: null,
+            iri: '',
+            active: false,
+            showExt: false,
+            typeIri: null,
+            displayValue: null,
+            displayStyle: null,
+            displayTooltip: null
+        }
+    },
 	computed: {
 		typeInfo() {
 			if (this.typeIri) {
@@ -77,7 +91,7 @@ export default {
 			return { type: 'unknown' };
 		},
 
-		literalValue() {
+		literalValue(): string {
 			let val = this.data.v.value.toString();
 			//limit the displayed length
 			if (val.length > 50) {
@@ -86,7 +100,7 @@ export default {
 			return val;
 		},
 
-		async literalTooltip() {
+		async literalTooltip(): Promise<string> {
 			let s = '';
 			if (this.data.v.datatype) {
 				const dec = await this.apiClient.getIriDecoder();
@@ -139,15 +153,15 @@ export default {
 			}
 		},
 
-		showIri(iri) {
+		showIri(iri: string) {
 			this.$emit('show-iri', iri);
 		},
 
-		hoverIri(iri) {
+		hoverIri(iri: string) {
 			this.$emit('hover-iri', iri);
 		},
 
-		leaveIri(iri) {
+		leaveIri(iri: string) {
 			this.$emit('leave-iri', iri);
 		},
 
@@ -155,7 +169,7 @@ export default {
 			this.$emit('show-ext', this.iri);
 		}
 	}
-}
+})
 </script>
 
 <style>
