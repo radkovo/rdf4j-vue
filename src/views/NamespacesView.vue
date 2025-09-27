@@ -5,10 +5,12 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import PrefixConfig from '../components/PrefixConfig.vue';
 
-export default {
+import { defineComponent } from 'vue';
+
+export default defineComponent({
 	name: 'NamespacesView',
 	components: {
 		PrefixConfig,
@@ -27,7 +29,7 @@ export default {
 	},
 	methods: {
 	}
-}
+});
 </script>
 
 <style>

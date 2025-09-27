@@ -41,8 +41,12 @@ import ApiClient from './common/apiclient';
 
 export default {
     name: 'app',
+	setup() {
+		return {
+			apiClient: new ApiClient(),
+		}
+	},
     data(): {
-        apiClient: ApiClient | null,
         authorized: boolean,
         serverUrl: string,
         userid: string | null,
@@ -53,7 +57,6 @@ export default {
         onReload: (() => void) | null
     } {
         return {
-            apiClient: null,
             authorized: false,
             serverUrl: '',
             userid: null,
@@ -72,8 +75,12 @@ export default {
 		Message,
 		Dialog
 	},
+    provide() {
+		return {
+			apiClient: this.apiClient,
+		}
+	},
 	created () {
-		this.apiClient = new ApiClient();
 		this.apiClient.onNotAuthorized = this.authFailed;
 		//assume authorized because username and password are optional for some servers
 		this.authorized = true;

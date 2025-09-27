@@ -336,7 +336,7 @@ export default class ApiClient {
 
 			const data = await response.json();
 			let ret = [];
-			for (let repo of data.bindings) {
+			for (let repo of data.results.bindings) {
 				ret.push({ id: repo.id.value, title: repo.title.value });
             }
 			return ret;

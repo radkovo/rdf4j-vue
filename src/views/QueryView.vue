@@ -7,7 +7,7 @@
 			Loading...
         </div>
 		<div class="query-results" v-if="!loading">
-			<div class="total-count" v-if="queryResult && queryResult.total">Total {{ queryResult.total }} results</div>
+			<div class="total-count" v-if="totalResults >= 0">Total {{ totalResults }} results</div>
 			<QueryResults v-if="queryResult && !loading" :result="queryResult">
 				<template #value="rdfValue">
 					<RdfValue :data="getValInfo(rdfValue)" :activeIris="false">
@@ -23,13 +23,17 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import RdfEditor from '../components/RdfEditor.vue';
 import QueryResults from "../components/QueryResults.vue"
 import RdfValue from '../components/RdfValue.vue';
 import RdfIri from '../components/RdfIri.vue';
 
-export default {
+import { defineComponent, inject } from 'vue';
+import type ApiClient from '@/common/apiclient';
+import type { DisplayValue, QueryResult, RdfValue as RdfValueType } from '@/common/types';
+
+export default defineComponent({
 	name: 'QueryView',
 	components: {
 		RdfEditor,
@@ -39,25 +43,34 @@ export default {
 	},
 	props: {
 	},
-	inject: ['apiClient'],
-	data () {
+	setup() {
+		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
+	},
+	data(): {
+		loading: boolean,
+		queryResult: QueryResult | null,
+		totalResults: number,
+	} {
 		return {
 			loading: false,
-			queryResult: null
+			queryResult: null,
+			totalResults: -1
 		}
 	},
 	created () {
 		this.update();
 	},
 	computed: {
-		repoId() {
-			return this.$route.params.repoId;
+		repoId(): string {
+			return this.$route.params.repoId?.toString();
 		}
 	},
 	watch: {
 	},
 	methods: {
-        getValInfo(data) {
+        getValInfo(data: RdfValueType): DisplayValue {
 			// transforms data to the form expected by RdfValue component (v: value, p: property, c: context)
 			// property and value are not available in query view but can be provided e.g. by the explore view and are
 			// potentially useful for displaying the value details
@@ -67,17 +80,22 @@ export default {
 		update() {
 		},
 
-		loadingStart(start) {
+		loadingStart(start: boolean) {
 			this.loading = start;
 		},
 
-		resultsHandler(r) {
+		resultsHandler(r: QueryResult | null) {
 			this.queryResult = r;
 			console.log(r);
+			if (r && r.type === 'select' && r.total) {
+                this.totalResults = r.total;
+            } else {
+                this.totalResults = -1;
+            }
 		},
 
 	}
-}
+});
 </script>
 
 <style>

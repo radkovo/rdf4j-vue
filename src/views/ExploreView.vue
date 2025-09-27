@@ -21,7 +21,7 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
 import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
@@ -30,8 +30,11 @@ import QueryResults from '../components/QueryResults.vue';
 import RdfIri from '../components/RdfIri.vue';
 import RdfValue from '../components/RdfValue.vue';
 
+import { defineComponent, inject } from 'vue';
+import type ApiClient from '@/common/apiclient';
+import type { DisplayValue, QueryResult, RdfValue as RdfValueType } from '@/common/types';
 
-export default {
+export default defineComponent({
 	name: 'ExploreView',
 	components: {
 		Button,
@@ -43,9 +46,20 @@ export default {
 	},
 	props: {
 	},
-	inject: ['apiClient'],
-	data () {
+	setup() {
 		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
+	},
+	data(): {
+		loading: boolean,
+		queryResult: QueryResult | null,
+		destIri: string | null,
+		selMode: string,
+        modes: string[]
+	} {
+		return {
+			loading: false,
 			queryResult: null,
 			destIri: null,
 			selMode: 'any',
@@ -57,14 +71,14 @@ export default {
 		this.update();
 	},
 	computed: {
-		iri() {
-			return this.$route.params.iri;
+		iri(): string {
+			return this.$route.params.iri?.toString();
 		},
-		mode() {
-			return this.$route.params.mode;
+		mode(): string {
+			return this.$route.params.mode?.toString();
 		},
-		repoId() {
-			return this.$route.params.repoId;
+		repoId(): string {
+			return this.$route.params.repoId?.toString();
 		}
 	},
 	watch: {
@@ -72,7 +86,7 @@ export default {
 		'$route.params.mode': 'update',
 	},
 	methods: {
-        getValInfo(data) {
+        getValInfo(data: RdfValueType): DisplayValue {
 			// transforms data to the form expected by RdfValue component (v: value, p: property, c: context)
 			// property and value are not available in query view but can be provided e.g. by the explore view and are
 			// potentially useful for displaying the value details
@@ -103,7 +117,8 @@ export default {
 					data = await this.apiClient.getSubjectMentions(iri);
 				}
 				this.queryResult = {
-					data: data, 
+					data: data,
+					total: data.results.bindings.length,
 					prefixes: [],
 					type: 'select'
 				};
@@ -114,12 +129,14 @@ export default {
 		},
 
 		async changeIri() {
-			let dec = await this.apiClient.getIriDecoder();
-			let iri = dec.decodeIri(this.destIri);
-			this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri, mode: this.selMode }});
+			if (this.destIri) {
+				let dec = await this.apiClient.getIriDecoder();
+				let iri = dec.decodeIri(this.destIri);
+				this.$router.push({name: 'explore', params: { repoId: this.repoId, iri: iri, mode: this.selMode }});
+			}
 		}
 	}
-}
+});
 </script>
 
 <style>

@@ -20,15 +20,19 @@
 	</div>
 </template>
 
-<script>
-import DataTable from 'primevue/datatable';
+<script lang="ts">
+import DataTable, { type DataTableFilterMeta } from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import RdfIri from '../components/RdfIri.vue';
 
 import {FilterMatchMode} from '@primevue/core/api';
+import type ApiClient from '@/common/apiclient';
 
-export default {
+import { defineComponent, inject } from 'vue';
+import type { ContextDescription } from '@/common/types';
+
+export default defineComponent({
 	name: 'ContextsView',
 	components: {
 		DataTable,
@@ -38,8 +42,16 @@ export default {
 	},
 	props: {
 	},
-	inject: ['apiClient'],
-	data () {
+	setup() {
+		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
+	},
+	data(): {
+		loading: boolean,
+        contexts: ContextDescription[],
+        dFilters: DataTableFilterMeta
+	} {
 		return {
 			loading: false,
 			contexts: [],
@@ -64,7 +76,7 @@ export default {
 			this.contexts = await this.apiClient.getContexts();
         }
 	}
-}
+});
 </script>
 
 <style>

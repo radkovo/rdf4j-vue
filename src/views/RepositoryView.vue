@@ -39,21 +39,25 @@ import type ApiClient from '@/common/apiclient';
 import { computed } from 'vue';
 import type { RepositoryInfo } from '@/common/types';
 
-export default {
+import { defineComponent, inject } from 'vue';
+
+export default defineComponent({
     name: 'RepositoryView',
     components: {
         Menubar,
         Button,
     },
+	setup() {
+		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
+	},
     data(): {
-        apiClient: ApiClient | null,
         repoInfo: RepositoryInfo | null,
         menuItems: MenuItem[]
     } {
         return {
-            apiClient: (this.$root as any).apiClient,
             repoInfo: null,
-
             menuItems: [
                 //{label: 'Overview', to: {name: 'repo'}},
                 {label: 'Query', to: {name: 'query'}},
@@ -65,7 +69,6 @@ export default {
     },
     provide() {
 		return {
-			apiClient: this.apiClient,
 			repoInfo: computed(() => this.repoInfo),
 			repoId: computed(() => this.repoId),
 			repoTitle: computed(() =>this.repoTitle),
@@ -94,36 +97,27 @@ export default {
 	watch: {
 	},
 	async created () {
-		this.apiClient = (this.$root as any).apiClient;
 		if (!this.apiClient) {
             throw new Error('API client not found. It should be provided in the root Vue instance.');
         }
-		let repoId = this.$route.params.repoId;
-		if (Array.isArray(repoId)) {
-			if (repoId.length > 0) {
-            	repoId = repoId[0];
+		let repoId = this.$route.params.repoId?.toString();
+		if (repoId) {
+			this.apiClient.setRepository(repoId);
+			let repos = await this.apiClient.listRepositories();
+			let repoInfo = repos.find(repo => repo.id === repoId);
+			if (repoInfo) {
+				this.repoInfo = repoInfo;
 			} else {
-				this.$router.push({name: 'home'}); // no repository found, redirect to home page
-				repoId = 'default';
+				this.$router.push({name: 'home'}); // no such repository found, redirect to home page
 			}
-        }
-		await this.apiClient.setRepository(repoId);
-		let repos = await this.apiClient.listRepositories();
-		let repoInfo = repos.find(repo => repo.id === repoId);
-		if (repoInfo) {
-			this.repoInfo = repoInfo;
-		} else {
-			this.$router.push({name: 'home'}); // no such repository found, redirect to home page
-        }
+		}
 	},
 	methods: {
-
 		quit() {
 			this.$router.push({name: 'home'});
 		}
-
 	}
-}
+});
 </script>
 
 <style>

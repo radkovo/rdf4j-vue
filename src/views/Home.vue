@@ -36,31 +36,44 @@
 	</div>
 </template>
 
-<script>
+<script lang="ts">
+import type ApiClient from '@/common/apiclient';
+import type { RepositoryInfo } from '@/common/types';
+import { errMsg } from '@/common/utils';
 import Button from 'primevue/button';
 import Menubar from 'primevue/menubar';
+import type { MenuItem } from 'primevue/menuitem';
+
+import { defineComponent, inject } from 'vue';
 
 
-export default {
+export default defineComponent({
 	name: 'home',
 	components: {
 		Menubar,
 		Button
 	},
-	//inject: ['apiClient'],
-	data() {
+	setup() {
+		return {
+			apiClient: inject('apiClient') as ApiClient
+		}
+	},
+	data(): {
+		error: string | null,
+        repositoryList: RepositoryInfo[] | null,
+        menuItems: MenuItem[]  // menu items are defined in the parent component (App.vue)
+	} {
 		return {
 			error: null,
-			apiClient: null,
 			repositoryList: null,
-
 			menuItems: []
 		}
 	},
 	created () {
-		this.apiClient = this.$root.apiClient;
 		this.loadRepositoryInfo();
-		this.$root.onReload = this.loadRepositoryInfo; // update repository list when the server is reconnected
+		if (this.$root) {
+			(this.$root as any).onReload = this.loadRepositoryInfo; // update repository list when the server is reconnected
+		}
 	},
 	methods: {
 		async loadRepositoryInfo() {
@@ -69,7 +82,7 @@ export default {
 				this.repositoryList = await this.apiClient.listRepositories();
                 console.log('repositoryList:', this.repositoryList);
 			} catch (e) {
-				this.error = e.message;
+				this.error = errMsg(e);
 			}
 			if (this.repositoryList === null) {
 				this.repositoryList = []; //use an empty list when some fetch failed
@@ -79,10 +92,10 @@ export default {
 		changeServer() {
             this.error = null;
             this.repositoryList = null;
-			this.$root.authFailed(); // force changing the credentials
+			(this.$root as any).authFailed(); // force changing the credentials
         }
 	}
-}
+});
 </script>
 
 <style>
