@@ -24,7 +24,7 @@
 import DataTable, { type DataTableFilterMeta } from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
-import RdfIri from '../components/RdfIri.vue';
+import RdfIri from 'rdf4j-vue-components';
 
 import {FilterMatchMode} from '@primevue/core/api';
 import type ApiClient from '@/common/apiclient';

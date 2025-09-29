@@ -37,13 +37,13 @@ import Checkbox from 'primevue/checkbox';
 import Message from 'primevue/message';
 import Dialog from 'primevue/dialog';
 
-import ApiClient from './common/apiclient';
+import DefaultApiClient from 'rdf4j-vue-components';
 
 export default {
     name: 'app',
 	setup() {
 		return {
-			apiClient: new ApiClient(),
+			apiClient: new DefaultApiClient(),
 		}
 	},
     data(): {
