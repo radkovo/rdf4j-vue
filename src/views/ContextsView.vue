@@ -24,13 +24,12 @@
 import DataTable, { type DataTableFilterMeta } from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
-import RdfIri from 'rdf4j-vue-components';
+import { RdfIri } from '@burgetr/rdf4j-vue-components';
 
 import {FilterMatchMode} from '@primevue/core/api';
-import type ApiClient from '@/common/apiclient';
+import type { ApiClient, ContextDescription } from '@burgetr/rdf4j-vue-components';
 
 import { defineComponent, inject } from 'vue';
-import type { ContextDescription } from '@/common/types';
 
 export default defineComponent({
 	name: 'ContextsView',

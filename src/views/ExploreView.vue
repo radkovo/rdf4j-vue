@@ -26,13 +26,10 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import Select from 'primevue/select';
 
-import QueryResults from '../components/QueryResults.vue';
-import RdfIri from '../components/RdfIri.vue';
-import RdfValue from '../components/RdfValue.vue';
+import { QueryResults, RdfIri, RdfValue } from '@burgetr/rdf4j-vue-components';
+import type { ApiClient, DisplayValue, QueryResult, RdfValueSpec } from '@burgetr/rdf4j-vue-components';
 
 import { defineComponent, inject } from 'vue';
-import type ApiClient from '@/common/apiclient';
-import type { DisplayValue, QueryResult, RdfValue as RdfValueType } from '@/common/types';
 
 export default defineComponent({
 	name: 'ExploreView',
@@ -86,7 +83,7 @@ export default defineComponent({
 		'$route.params.mode': 'update',
 	},
 	methods: {
-        getValInfo(data: RdfValueType): DisplayValue {
+        getValInfo(data: RdfValueSpec): DisplayValue {
 			// transforms data to the form expected by RdfValue component (v: value, p: property, c: context)
 			// property and value are not available in query view but can be provided e.g. by the explore view and are
 			// potentially useful for displaying the value details

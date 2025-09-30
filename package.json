@@ -1,6 +1,6 @@
 {
-  "name": "rdf4j-vue",
-  "version": "0.0.0",
+  "name": "@burgetr/rdf4j-vue",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "engines": {
@@ -14,11 +14,11 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@burgetr/rdf4j-vue-components": "file:../rdf4j-vue-components",
     "@primevue/themes": "^4.3.9",
     "events": "^3.3.0",
     "primeicons": "^7.0.0",
     "primevue": "^4.3.9",
-    "rdf4j-vue-components": "file:../rdf4j-vue-components",
     "tailwindcss-primeui": "^0.6.1",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"

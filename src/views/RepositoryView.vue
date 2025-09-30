@@ -34,10 +34,9 @@
 import Menubar from 'primevue/menubar';
 import Button from 'primevue/button';
 import type { MenuItem } from 'primevue/menuitem';
-import type ApiClient from '@/common/apiclient';
+import type { ApiClient, RepositoryInfo } from '@burgetr/rdf4j-vue-components';
 
 import { computed } from 'vue';
-import type { RepositoryInfo } from '@/common/types';
 
 import { defineComponent, inject } from 'vue';
 

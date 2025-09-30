@@ -34,13 +34,14 @@ const MyPreset = definePreset(Aura, {
 app.use(PrimeVue, {
     theme: {
         preset: MyPreset,
+        unstyled: false,
         options: {
-            darkModeSelector: '.fitlayout-dark', /* not used yet, prepared for theme switch */
+            darkModeSelector: '.rdf4j-vue-dark', /* not used yet, prepared for theme switch */
+            cssLayer: {
+                name: 'primevue',
+                order: 'theme, base, primevue'
+            }
         },
-        cssLayer: {
-            name: 'primevue',
-            order: 'theme, base, primevue'
-        }        
     }
 });
 app.use(ConfirmationService);
