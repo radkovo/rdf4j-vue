@@ -11,6 +11,7 @@ import router from './router';
 import Aura from '@primevue/themes/aura';
 
 import 'primeicons/primeicons.css';
+import '@burgetr/rdf4j-vue-components/style.css';
 
 const app = createApp(App);
 const MyPreset = definePreset(Aura, {
