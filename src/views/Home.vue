@@ -37,8 +37,8 @@
 </template>
 
 <script lang="ts">
-import type ApiClient from '@/common/apiclient';
-import type { RepositoryInfo } from '@/common/types';
+import type { ApiClient } from '@/rdf4j-vue-components/src/common/apiclient';
+import type { RepositoryInfo } from '@/rdf4j-vue-components/src/common/types';
 import { errMsg } from '@/common/utils';
 import Button from 'primevue/button';
 import Menubar from 'primevue/menubar';

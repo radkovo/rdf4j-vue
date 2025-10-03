@@ -34,10 +34,10 @@
 import Menubar from 'primevue/menubar';
 import Button from 'primevue/button';
 import type { MenuItem } from 'primevue/menuitem';
-import type ApiClient from '@/common/apiclient';
+import type { ApiClient } from '@/rdf4j-vue-components/src/common/apiclient';
 
 import { computed } from 'vue';
-import type { RepositoryInfo } from '@/common/types';
+import type { RepositoryInfo } from '@/rdf4j-vue-components/src/common/types';
 
 import { defineComponent, inject } from 'vue';
 

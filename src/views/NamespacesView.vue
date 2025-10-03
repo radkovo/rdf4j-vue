@@ -6,7 +6,7 @@
 </template>
 
 <script lang="ts">
-import PrefixConfig from '../components/PrefixConfig.vue';
+import PrefixConfig from '@/rdf4j-vue-components/src/components/PrefixConfig.vue';
 
 import { defineComponent } from 'vue';
 

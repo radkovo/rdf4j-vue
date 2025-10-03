@@ -24,14 +24,14 @@
 </template>
 
 <script lang="ts">
-import RdfEditor from '../components/RdfEditor.vue';
-import QueryResults from "../components/QueryResults.vue"
-import RdfValue from '../components/RdfValue.vue';
-import RdfIri from '../components/RdfIri.vue';
+import RdfEditor from '@/rdf4j-vue-components/src/components/RdfEditor.vue';
+import QueryResults from "@/rdf4j-vue-components/src/components/QueryResults.vue"
+import RdfValue from '@/rdf4j-vue-components/src/components/RdfValue.vue';
+import RdfIri from '@/rdf4j-vue-components/src/components/RdfIri.vue';
 
 import { defineComponent, inject } from 'vue';
-import type ApiClient from '@/common/apiclient';
-import type { DisplayValue, QueryResult, RdfValue as RdfValueType } from '@/common/types';
+import type { ApiClient } from '@/rdf4j-vue-components/src/common/apiclient';
+import type { DisplayValue, QueryResult, RdfValueSpec } from '@/rdf4j-vue-components/src/common/types';
 
 export default defineComponent({
 	name: 'QueryView',
@@ -70,7 +70,7 @@ export default defineComponent({
 	watch: {
 	},
 	methods: {
-        getValInfo(data: RdfValueType): DisplayValue {
+        getValInfo(data: RdfValueSpec): DisplayValue {
 			// transforms data to the form expected by RdfValue component (v: value, p: property, c: context)
 			// property and value are not available in query view but can be provided e.g. by the explore view and are
 			// potentially useful for displaying the value details

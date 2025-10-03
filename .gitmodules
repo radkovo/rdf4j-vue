@@ -1,0 +1,3 @@
+[submodule "src/rdf4j-vue-components"]
+	path = src/rdf4j-vue-components
+	url = https://github.com/radkovo/rdf4j-vue-components.git
