@@ -14,7 +14,7 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "@primevue/themes": "^4.3.9",
+    "@primeuix/themes": "^1.2.5",
     "events": "^3.3.0",
     "n3": "^1.26.0",
     "primeicons": "^7.0.0",

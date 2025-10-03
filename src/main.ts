@@ -1,5 +1,5 @@
 import { createApp } from 'vue';
-import { definePreset } from '@primevue/themes';
+import { definePreset } from '@primeuix/themes';
 
 import App from './App.vue';
 import PrimeVue from 'primevue/config';
@@ -8,7 +8,7 @@ import Tooltip from 'primevue/tooltip';
 import ToastService from "primevue/toastservice";
 import router from './router';
 
-import Aura from '@primevue/themes/aura';
+import Aura from '@primeuix/themes/aura';
 
 import 'primeicons/primeicons.css';
 
