@@ -35,7 +35,7 @@ app.use(PrimeVue, {
     theme: {
         preset: MyPreset,
         options: {
-            darkModeSelector: '.fitlayout-dark', /* not used yet, prepared for theme switch */
+            darkModeSelector: '.rdf4j-vue-dark', /* not used yet, prepared for theme switch */
         },
         cssLayer: {
             name: 'primevue',
