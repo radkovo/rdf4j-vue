@@ -1,7 +1,7 @@
 <template>
     <div id="app" class="">
 		<router-view></router-view>
-		<Dialog :visible="!authorized" :closable="false" modal header="Server connection" :style="{ width: '50rem' }" ref="loginDialog">
+		<Dialog :visible="!authorized || dialogShown" :closable="authorized" modal header="Server connection" :style="{ width: '50rem' }" ref="loginDialog" @update:visible="showDialog">
 			<form @submit="submitForm">
 				<div class="flex flex-col gap-6 w-full">
 					<div class="field">
@@ -48,6 +48,7 @@ export default {
 	},
     data(): {
         authorized: boolean,
+		dialogShown: boolean,
         serverUrl: string,
         userid: string | null,
         password: string | null,
@@ -58,6 +59,7 @@ export default {
     } {
         return {
             authorized: false,
+			dialogShown: false,
             serverUrl: '',
             userid: null,
             password: null,
@@ -105,7 +107,16 @@ export default {
 		authFailed() {
 			console.error('Authentication failed');
 			this.authorized = false;
+			this.error = 'Authentication failed.';
 		},
+
+		changeServer() {
+			this.dialogShown = true;
+		},
+
+		showDialog(b: boolean) {
+            this.dialogShown = b;
+        },
 
         async submitForm(ev: Event): Promise<void> {
             ev.preventDefault();
@@ -123,6 +134,7 @@ export default {
 					await this.apiClient.login(this.userid, this.password);
 				}
 				this.authorized = true;
+				this.dialogShown = false;
                 this.loading = false;
 				this.error = null;
 				if (this.onReload) {

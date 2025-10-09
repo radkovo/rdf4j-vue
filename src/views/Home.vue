@@ -80,7 +80,6 @@ export default defineComponent({
 			this.error = null;
 			try {
 				this.repositoryList = await this.apiClient.listRepositories();
-                console.log('repositoryList:', this.repositoryList);
 			} catch (e) {
 				this.error = errMsg(e);
 			}
@@ -91,8 +90,7 @@ export default defineComponent({
 
 		changeServer() {
             this.error = null;
-            this.repositoryList = null;
-			(this.$root as any).authFailed(); // force changing the credentials
+			(this.$root as any).changeServer(); // force changing the credentials
         }
 	}
 });
